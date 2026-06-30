@@ -3,7 +3,7 @@ object frmMain: TfrmMain
   Top = 0
   Caption = 'Save Editor'
   ClientHeight = 600
-  ClientWidth = 960
+  ClientWidth = 984
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,23 +15,34 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
+  object Splitter2: TSplitter
+    Left = 701
+    Top = 0
+    Height = 581
+    Align = alRight
+    ExplicitLeft = 632
+    ExplicitTop = 240
+    ExplicitHeight = 100
+  end
   object StatusBar: TStatusBar
     Left = 0
     Top = 581
-    Width = 960
+    Width = 984
     Height = 19
     Panels = <>
     SimplePanel = True
+    ExplicitWidth = 960
   end
   object PageControl: TPageControl
     Left = 0
     Top = 0
-    Width = 960
+    Width = 701
     Height = 581
-    ActivePage = tabTree
+    ActivePage = tabJson
     Align = alClient
     TabOrder = 0
     OnChange = PageControlChange
+    ExplicitWidth = 625
     object tabTree: TTabSheet
       Caption = 'Tree'
       object Splitter1: TSplitter
@@ -125,11 +136,12 @@ object frmMain: TfrmMain
       object PanelEdit: TPanel
         Left = 305
         Top = 0
-        Width = 647
+        Width = 388
         Height = 551
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitWidth = 312
         object lblPath: TLabel
           Left = 8
           Top = 8
@@ -149,12 +161,13 @@ object frmMain: TfrmMain
         object memoValue: TMemo
           Left = 0
           Top = 0
-          Width = 647
+          Width = 388
           Height = 551
           Align = alClient
           ScrollBars = ssBoth
           TabOrder = 1
           WordWrap = False
+          ExplicitWidth = 312
         end
       end
     end
@@ -164,7 +177,7 @@ object frmMain: TfrmMain
       object memoJson: TMemo
         Left = 0
         Top = 0
-        Width = 952
+        Width = 693
         Height = 551
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
@@ -178,8 +191,89 @@ object frmMain: TfrmMain
         WantTabs = True
         WordWrap = False
         OnChange = memoJsonChange
-        ExplicitHeight = 571
+        ExplicitWidth = 952
       end
+    end
+  end
+  object gpFolderPath: TGridPanel
+    Left = 704
+    Top = 0
+    Width = 280
+    Height = 581
+    Align = alRight
+    BevelOuter = bvNone
+    ColumnCollection = <
+      item
+        Value = 100.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 30.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = edtFolderPath
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = spbFolderPath
+        Row = 0
+      end
+      item
+        Column = 0
+        ColumnSpan = 2
+        Control = lbFilesList
+        Row = 1
+      end>
+    RowCollection = <
+      item
+        SizeStyle = ssAbsolute
+        Value = 30.000000000000000000
+      end
+      item
+        Value = 100.000000000000000000
+      end>
+    TabOrder = 2
+    ExplicitLeft = 680
+    DesignSize = (
+      280
+      581)
+    object edtFolderPath: TEdit
+      Left = 0
+      Top = 0
+      Width = 250
+      Height = 30
+      Align = alClient
+      TabOrder = 0
+      ExplicitLeft = 6
+      ExplicitTop = 25
+      ExplicitWidth = 248
+    end
+    object spbFolderPath: TSpeedButton
+      Left = 253
+      Top = 4
+      Width = 23
+      Height = 22
+      Anchors = []
+      Caption = '...'
+      Flat = True
+      ExplicitLeft = 264
+      ExplicitTop = 8
+    end
+    object lbFilesList: TListBox
+      Left = 0
+      Top = 30
+      Width = 280
+      Height = 551
+      Align = alClient
+      ItemHeight = 15
+      TabOrder = 1
+      ExplicitLeft = 80
+      ExplicitTop = 152
+      ExplicitWidth = 121
+      ExplicitHeight = 97
     end
   end
   object MainMenu: TMainMenu

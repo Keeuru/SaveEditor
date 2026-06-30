@@ -7,7 +7,7 @@ uses
   System.IOUtils, System.Generics.Collections, System.UITypes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Menus,
-  SaveCodec, SaveSlots;
+  SaveCodec, SaveSlots, Vcl.Buttons;
 
 type
   TfrmMain = class(TForm)
@@ -50,6 +50,11 @@ type
     N2: TMenuItem;
     mnuFormatJson: TMenuItem;
     mnuReloadTree: TMenuItem;
+    gpFolderPath: TGridPanel;
+    edtFolderPath: TEdit;
+    spbFolderPath: TSpeedButton;
+    lbFilesList: TListBox;
+    Splitter2: TSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure mnuOpenClick(Sender: TObject);
