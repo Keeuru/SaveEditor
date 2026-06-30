@@ -1,0 +1,8 @@
+
+__history/
+
+*.local
+
+Win32/Debug/
+
+Win32/Release/
