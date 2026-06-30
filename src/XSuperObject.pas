@@ -33,16 +33,16 @@ interface
 {$I XSuperObject.inc}
 
 uses
-  Classes,
-  Variants,
-  SysUtils,
-  Character,
+  System.Classes,
+  System.Variants,
+  System.SysUtils,
+  System.Character,
   XSuperJSON,
-  RTTI,
-  TypInfo,
+  System.RTTI,
+  System.TypInfo,
   Generics.Collections
   {$IFDEF SP_DATASET}
-  ,DB
+  ,Data.DB
   {$ENDIF}
   {$IFDEF SP_STREAM}
   ,IdGlobal
@@ -726,7 +726,6 @@ constructor TBaseJSON<T, Typ>.Create(JSON: String; const CheckDate: Boolean);
 type PInterface = ^IInterface;
 var
   JVal: IJSONAncestor;
-  PIntf: PInterface;
 begin
   FCheckDate := CheckDate;
   if (Self.InheritsFrom(TSuperArray)) and (Trim(JSON) = '{}') then JSON := '[]';
@@ -761,7 +760,7 @@ begin
     varBoolean: Result := B[V];
     varDate: Result := D[V];
   else
-    Result := Variants.Null;
+    Result := System.Variants.Null;
   end;
 end;
 
@@ -2930,7 +2929,7 @@ function TCast.GetVariant: Variant;
 begin
    case DataType of
      dtNil, dtNull, dtObject, dtArray:
-        Result := Null;
+        Result := System.Variants.Null;
      dtString:
         Result := AsString;
      dtInteger:
@@ -3134,7 +3133,7 @@ constructor REVAL.Create(EQVal: String);
 begin
   FOption := roNone;
   FEqual := EQVal;
-  FValue := Variants.Null;
+  FValue := Null;
 end;
 
 constructor REVAL.Create(EQVal, NewVal: Boolean);
@@ -3148,21 +3147,21 @@ constructor REVAL.Create(EQVal: Integer);
 begin
   FOption := roNone;
   FEqual := EQVal;
-  FValue := Variants.Null;
+  FValue := Null;
 end;
 
 constructor REVAL.Create(EQVal: Double);
 begin
   FOption := roNone;
   FEqual := EQVal;
-  FValue := Variants.Null;
+  FValue := Null;
 end;
 
 constructor REVAL.Create(EQVal: Boolean);
 begin
   FOption := roNone;
   FEqual := EQVal;
-  FValue := Variants.Null;
+  FValue := Null;
 end;
 
 constructor REVAL.Create(Option: TRevalOption);
@@ -3172,7 +3171,7 @@ begin
   FOption := Option;
   case FOption of
     roEmptyArrayToNull:
-       FValue := Variants.Null;
+       FValue := Null;
   end;
 end;
 

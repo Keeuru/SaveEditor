@@ -15,6 +15,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Save Editor';
-  AApplication.CreateForm(TfrmMain, frmMain);
-  pplication.Run;
+  Application.CreateForm(TfrmMain, frmMain);
+  Application.Run;
 end.

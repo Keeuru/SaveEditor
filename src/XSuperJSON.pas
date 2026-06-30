@@ -31,7 +31,7 @@ unit XSuperJSON;
 interface
 
 uses
-  SysUtils, Classes, Generics.Collections, Generics.Defaults, Math, DateUtils, RegularExpressions, RTTI;
+  System.SysUtils, System.Classes, Generics.Collections, Generics.Defaults, System.Math, System.DateUtils, System.RegularExpressions, System.RTTI;
 
 
 const
@@ -830,7 +830,7 @@ end;
 
 procedure TLexBuff.Grow;
 begin
-   Capacity := Math.Max(Capacity * 2, Length + 8);
+   Capacity := Max(Capacity * 2, Length + 8);
    ReallocMem(Buff, Capacity * SizeOf(WideChar));
 end;
 
