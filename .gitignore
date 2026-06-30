@@ -6,3 +6,9 @@ __history/
 Win32/Debug/
 
 Win32/Release/
+
+*.identcache
+
+*.RES
+
+*.rsm
