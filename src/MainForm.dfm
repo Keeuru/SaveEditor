@@ -247,6 +247,7 @@ object frmMain: TfrmMain
       Height = 30
       Align = alClient
       TabOrder = 0
+      OnKeyDown = edtFolderPathKeyDown
       ExplicitLeft = 6
       ExplicitTop = 25
       ExplicitWidth = 248
@@ -259,6 +260,7 @@ object frmMain: TfrmMain
       Anchors = []
       Caption = '...'
       Flat = True
+      OnClick = spbFolderPathClick
       ExplicitLeft = 264
       ExplicitTop = 8
     end
@@ -270,6 +272,7 @@ object frmMain: TfrmMain
       Align = alClient
       ItemHeight = 15
       TabOrder = 1
+      OnDblClick = lbFilesListDblClick
       ExplicitLeft = 80
       ExplicitTop = 152
       ExplicitWidth = 121
@@ -355,6 +358,12 @@ object frmMain: TfrmMain
   end
   object JsonOpenDialog: TOpenDialog
     Left = 384
+    Top = 80
+  end
+  object ApplicationEvents: TApplicationEvents
+    OnActivate = AppActivate
+    OnIdle = AppIdle
+    Left = 472
     Top = 80
   end
 end

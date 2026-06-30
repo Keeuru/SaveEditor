@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, System.JSON,
   System.IOUtils, System.Generics.Collections, System.UITypes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.Menus,
+  Vcl.ExtCtrls, Vcl.Menus, Vcl.AppEvnts,
   SaveCodec, SaveSlots, Vcl.Buttons;
 
 type
@@ -55,8 +55,11 @@ type
     spbFolderPath: TSpeedButton;
     lbFilesList: TListBox;
     Splitter2: TSplitter;
+    ApplicationEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure AppActivate(Sender: TObject);
+    procedure AppIdle(Sender: TObject; var Done: Boolean);
     procedure mnuOpenClick(Sender: TObject);
     procedure mnuSaveClick(Sender: TObject);
     procedure mnuSaveAsClick(Sender: TObject);
@@ -74,6 +77,9 @@ type
     procedure btnFindPrevClick(Sender: TObject);
     procedure edtSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure mnuFindClick(Sender: TObject);
+    procedure spbFolderPathClick(Sender: TObject);
+    procedure edtFolderPathKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure lbFilesListDblClick(Sender: TObject);
   private
     FJsonRoot: TJSONValue;
     FNodeKeys: TDictionary<TTreeNode, string>;
@@ -81,6 +87,7 @@ type
     FModified: Boolean;
     FUpdating: Boolean;
     FLastSearchNode: TTreeNode;
+    FDirChangeHandle: THandle;
     procedure SetModified(AValue: Boolean);
     procedure UpdateCaption;
     procedure UpdateStatus;
@@ -104,6 +111,14 @@ type
     function FindSearchNode(AForward: Boolean): TTreeNode;
     procedure FocusSearchNode(ANode: TTreeNode);
     procedure ApplyJsonFromText(const AJsonText: string);
+    function PickFolder(var ADirectory: string): Boolean;
+    procedure RefreshSaveFilesList(AShowErrors: Boolean = True);
+    procedure StartFolderWatch;
+    procedure StopFolderWatch;
+    procedure CheckFolderWatch;
+    procedure OnApplicationActivated;
+  protected
+    procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
   public
   end;
 
@@ -116,6 +131,7 @@ implementation
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
+  FDirChangeHandle := 0;
   FNodeKeys := TDictionary<TTreeNode, string>.Create;
   OpenDialog.Filter := 'Файлы сохранения (*.save)|*.save|Все файлы (*.*)|*.*';
   SaveDialog.Filter := OpenDialog.Filter;
@@ -129,6 +145,7 @@ end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
+  StopFolderWatch;
   ClearDocument;
   FNodeKeys.Free;
 end;
@@ -963,6 +980,172 @@ begin
   PageControl.ActivePage := tabTree;
   edtSearch.SetFocus;
   edtSearch.SelectAll;
+end;
+
+function TfrmMain.PickFolder(var ADirectory: string): Boolean;
+var
+  Dialog: TFileOpenDialog;
+begin
+  Result := False;
+  Dialog := TFileOpenDialog.Create(nil);
+  try
+    Dialog.Title := 'Выбор папки с сохранениями';
+    Dialog.Options := Dialog.Options + [fdoPickFolders, fdoPathMustExist];
+    if ADirectory <> '' then
+      Dialog.DefaultFolder := ADirectory;
+    if Dialog.Execute then
+    begin
+      ADirectory := Dialog.FileName;
+      Result := True;
+    end;
+  finally
+    Dialog.Free;
+  end;
+end;
+
+procedure TfrmMain.OnApplicationActivated;
+begin
+  CheckFolderWatch;
+  RefreshSaveFilesList(False);
+end;
+
+procedure TfrmMain.AppActivate(Sender: TObject);
+begin
+  OnApplicationActivated;
+end;
+
+procedure TfrmMain.WMActivateApp(var Message: TWMActivateApp);
+begin
+  inherited;
+  if Message.Active then
+    OnApplicationActivated;
+end;
+
+procedure TfrmMain.AppIdle(Sender: TObject; var Done: Boolean);
+begin
+  CheckFolderWatch;
+end;
+
+procedure TfrmMain.StopFolderWatch;
+begin
+  if FDirChangeHandle <> 0 then
+  begin
+    FindCloseChangeNotification(FDirChangeHandle);
+    FDirChangeHandle := 0;
+  end;
+end;
+
+procedure TfrmMain.StartFolderWatch;
+var
+  Folder: string;
+begin
+  StopFolderWatch;
+  Folder := Trim(edtFolderPath.Text);
+  if (Folder = '') or not TDirectory.Exists(Folder) then
+    Exit;
+
+  FDirChangeHandle := FindFirstChangeNotification(
+    PChar(ExcludeTrailingPathDelimiter(Folder)),
+    False,
+    FILE_NOTIFY_CHANGE_FILE_NAME or FILE_NOTIFY_CHANGE_SIZE or
+    FILE_NOTIFY_CHANGE_LAST_WRITE);
+  if FDirChangeHandle = INVALID_HANDLE_VALUE then
+    FDirChangeHandle := 0;
+end;
+
+procedure TfrmMain.CheckFolderWatch;
+begin
+  if FDirChangeHandle = 0 then
+    Exit;
+  if WaitForSingleObject(FDirChangeHandle, 0) = WAIT_OBJECT_0 then
+  begin
+    FindNextChangeNotification(FDirChangeHandle);
+    RefreshSaveFilesList(False);
+  end;
+end;
+
+procedure TfrmMain.RefreshSaveFilesList(AShowErrors: Boolean);
+var
+  Folder: string;
+  Files: TArray<string>;
+  FileName: string;
+  Names: TStringList;
+  SelectedFile: string;
+  SelectedIndex: Integer;
+begin
+  SelectedFile := '';
+  if lbFilesList.ItemIndex >= 0 then
+    SelectedFile := lbFilesList.Items[lbFilesList.ItemIndex];
+
+  lbFilesList.Clear;
+  Folder := Trim(edtFolderPath.Text);
+  if Folder = '' then
+  begin
+    StopFolderWatch;
+    Exit;
+  end;
+  if not TDirectory.Exists(Folder) then
+  begin
+    StopFolderWatch;
+    if AShowErrors then
+      MessageDlg('Папка не найдена: ' + Folder, mtError, [mbOK], 0);
+    Exit;
+  end;
+
+  Files := TDirectory.GetFiles(Folder, '*.*', TSearchOption.soTopDirectoryOnly);
+  Names := TStringList.Create;
+  try
+    Names.Sorted := True;
+    for FileName in Files do
+      if SameText(ExtractFileExt(FileName), '.save') then
+        Names.Add(ExtractFileName(FileName));
+    lbFilesList.Items.Assign(Names);
+  finally
+    Names.Free;
+  end;
+
+  if SelectedFile <> '' then
+  begin
+    SelectedIndex := lbFilesList.Items.IndexOf(SelectedFile);
+    if SelectedIndex >= 0 then
+      lbFilesList.ItemIndex := SelectedIndex;
+  end;
+
+  StartFolderWatch;
+end;
+
+procedure TfrmMain.spbFolderPathClick(Sender: TObject);
+var
+  Dir: string;
+begin
+  Dir := Trim(edtFolderPath.Text);
+  if PickFolder(Dir) then
+  begin
+    edtFolderPath.Text := Dir;
+    RefreshSaveFilesList;
+  end;
+end;
+
+procedure TfrmMain.edtFolderPathKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    RefreshSaveFilesList;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmMain.lbFilesListDblClick(Sender: TObject);
+var
+  FilePath: string;
+begin
+  if lbFilesList.ItemIndex < 0 then
+    Exit;
+  if not ConfirmSaveIfModified then
+    Exit;
+  FilePath := IncludeTrailingPathDelimiter(Trim(edtFolderPath.Text)) +
+    lbFilesList.Items[lbFilesList.ItemIndex];
+  LoadDocument(FilePath);
 end;
 
 end.
