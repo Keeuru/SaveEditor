@@ -68,6 +68,9 @@ type
     procedure mnuExitClick(Sender: TObject);
     procedure TreeJsonChange(Sender: TObject; Node: TTreeNode);
     procedure btnApplyClick(Sender: TObject);
+    procedure memoValueChange(Sender: TObject);
+    procedure memoValueExit(Sender: TObject);
+    procedure memoValueKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure memoJsonChange(Sender: TObject);
     procedure mnuFormatJsonClick(Sender: TObject);
     procedure mnuReloadTreeClick(Sender: TObject);
@@ -88,6 +91,8 @@ type
     FUpdating: Boolean;
     FLastSearchNode: TTreeNode;
     FDirChangeHandle: THandle;
+    FMemoNode: TTreeNode;
+    FMemoDirty: Boolean;
     procedure SetModified(AValue: Boolean);
     procedure UpdateCaption;
     procedure UpdateStatus;
@@ -105,7 +110,8 @@ type
     procedure UpdateNodeCaption(ANode: TTreeNode; AValue: TJSONValue);
     function TreeNodePath(ANode: TTreeNode): string;
     function ReplaceNodeJsonValue(ANode: TTreeNode; ANewValue: TJSONValue): Boolean;
-    function ApplyValueFromMemo(AValue: TJSONValue): Boolean;
+    function ApplyValueFromMemo(AValue: TJSONValue; ANode: TTreeNode): Boolean;
+    function ApplyMemoIfDirty: Boolean;
     function NodeMatchesSearch(ANode: TTreeNode; const ASearch: string): Boolean;
     procedure CollectNodes(ANode: TTreeNode; AList: TList<TTreeNode>);
     function FindSearchNode(AForward: Boolean): TTreeNode;
@@ -132,6 +138,8 @@ implementation
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   FDirChangeHandle := 0;
+  FMemoNode := nil;
+  FMemoDirty := False;
   FNodeKeys := TDictionary<TTreeNode, string>.Create;
   OpenDialog.Filter := 'Файлы сохранения (*.save)|*.save|Все файлы (*.*)|*.*';
   SaveDialog.Filter := OpenDialog.Filter;
@@ -198,6 +206,8 @@ begin
   FreeAndNil(FJsonRoot);
   FFileName := '';
   FLastSearchNode := nil;
+  FMemoNode := nil;
+  FMemoDirty := False;
   TreeJson.Items.Clear;
   FNodeKeys.Clear;
   cboView.Items.Clear;
@@ -337,6 +347,7 @@ var
   Pair: TJSONPair;
   Key: string;
   Idx, I: Integer;
+  OldVal: TJSONValue;
   Snapshot: TList<TJSONValue>;
 begin
   Result := False;
@@ -365,7 +376,6 @@ begin
     Pair := Obj.RemovePair(Key);
     if Pair = nil then
       Exit;
-    Pair.JsonValue.Free;
     Pair.Free;
     Obj.AddPair(Key, ANewValue);
     ANode.Data := ANewValue;
@@ -384,8 +394,9 @@ begin
     try
       for I := 0 to Arr.Count - 1 do
         Snapshot.Add(Arr.Items[I]);
-      Snapshot[Idx].Free;
+      OldVal := Snapshot[Idx];
       Snapshot[Idx] := ANewValue;
+      OldVal.Free;
       while Arr.Count > 0 do
         Arr.Remove(0);
       for I := 0 to Snapshot.Count - 1 do
@@ -441,13 +452,19 @@ begin
   if ANode = nil then
   begin
     lblPath.Caption := '';
+    FMemoNode := nil;
+    FMemoDirty := False;
     Exit;
   end;
 
   lblPath.Caption := TreeNodePath(ANode);
   Val := TJSONValue(ANode.Data);
   if Val = nil then
+  begin
+    FMemoNode := ANode;
+    FMemoDirty := False;
     Exit;
+  end;
 
   FUpdating := True;
   try
@@ -469,6 +486,8 @@ begin
   finally
     FUpdating := False;
   end;
+  FMemoNode := ANode;
+  FMemoDirty := False;
 end;
 
 function TfrmMain.TreeNodePath(ANode: TTreeNode): string;
@@ -517,18 +536,16 @@ begin
     ANode.Text := S + 'null';
 end;
 
-function TfrmMain.ApplyValueFromMemo(AValue: TJSONValue): Boolean;
+function TfrmMain.ApplyValueFromMemo(AValue: TJSONValue; ANode: TTreeNode): Boolean;
 var
-  S, JsonFrag: string;
+  S: string;
   Num: Double;
   NewVal: TJSONValue;
-  Node: TTreeNode;
 begin
   Result := False;
-  if AValue = nil then
+  if (AValue = nil) or (ANode = nil) then
     Exit;
 
-  Node := TreeJson.Selected;
   S := memoValue.Text;
 
   if AValue is TJSONString then
@@ -559,15 +576,35 @@ begin
   else
     Exit;
 
-  JsonFrag := NewVal.ToJSON;
-  NewVal.Free;
-  NewVal := TJSONObject.ParseJSONValue(JsonFrag);
-  if NewVal = nil then
-    Exit;
-
-  Result := ReplaceNodeJsonValue(Node, NewVal);
+  Result := ReplaceNodeJsonValue(ANode, NewVal);
   if not Result then
     NewVal.Free;
+end;
+
+function TfrmMain.ApplyMemoIfDirty: Boolean;
+var
+  Node: TTreeNode;
+  Val: TJSONValue;
+begin
+  Result := True;
+  if not FMemoDirty or (FMemoNode = nil) or memoValue.ReadOnly then
+    Exit;
+
+  Node := FMemoNode;
+  Val := TJSONValue(Node.Data);
+  if Val = nil then
+  begin
+    FMemoDirty := False;
+    Exit;
+  end;
+
+  if not ApplyValueFromMemo(Val, Node) then
+    Exit(False);
+
+  UpdateNodeCaption(Node, TJSONValue(Node.Data));
+  SyncJsonMemo;
+  SetModified(True);
+  FMemoDirty := False;
 end;
 
 function TfrmMain.NodeMatchesSearch(ANode: TTreeNode; const ASearch: string): Boolean;
@@ -680,6 +717,8 @@ procedure TfrmMain.LoadDocument(const AFileName: string);
 var
   Json: TJSONValue;
 begin
+  if not ApplyMemoIfDirty then
+    Exit;
   Json := nil;
   try
     LoadSaveFromFile(AFileName, Json);
@@ -702,6 +741,8 @@ end;
 procedure TfrmMain.SaveDocument(const AFileName: string);
 begin
   if FJsonRoot = nil then
+    Exit;
+  if not ApplyMemoIfDirty then
     Exit;
   try
     if PageControl.ActivePage = tabJson then
@@ -844,21 +885,47 @@ end;
 
 procedure TfrmMain.TreeJsonChange(Sender: TObject; Node: TTreeNode);
 begin
+  if FUpdating then
+    Exit;
+  if not ApplyMemoIfDirty then
+  begin
+    FUpdating := True;
+    try
+      if FMemoNode <> nil then
+        TreeJson.Selected := FMemoNode;
+    finally
+      FUpdating := False;
+    end;
+    Exit;
+  end;
   ShowNodeValue(Node);
 end;
 
 procedure TfrmMain.btnApplyClick(Sender: TObject);
-var
-  Val: TJSONValue;
-  Node: TTreeNode;
 begin
-  Val := SelectedJsonValue;
-  if not ApplyValueFromMemo(Val) then
+  FMemoNode := TreeJson.Selected;
+  ApplyMemoIfDirty;
+end;
+
+procedure TfrmMain.memoValueChange(Sender: TObject);
+begin
+  if FUpdating or memoValue.ReadOnly then
     Exit;
-  Node := TreeJson.Selected;
-  UpdateNodeCaption(Node, Val);
-  SyncJsonMemo;
-  SetModified(True);
+  FMemoDirty := True;
+end;
+
+procedure TfrmMain.memoValueExit(Sender: TObject);
+begin
+  ApplyMemoIfDirty;
+end;
+
+procedure TfrmMain.memoValueKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    ApplyMemoIfDirty;
+    Key := 0;
+  end;
 end;
 
 procedure TfrmMain.memoJsonChange(Sender: TObject);
@@ -919,7 +986,10 @@ begin
   if FUpdating or (FJsonRoot = nil) then
     Exit;
   if PageControl.ActivePage = tabJson then
+  begin
+    ApplyMemoIfDirty;
     SyncJsonMemo;
+  end;
 end;
 
 procedure TfrmMain.cboViewChange(Sender: TObject);

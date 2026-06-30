@@ -31,18 +31,16 @@ object frmMain: TfrmMain
     Height = 19
     Panels = <>
     SimplePanel = True
-    ExplicitWidth = 960
   end
   object PageControl: TPageControl
     Left = 0
     Top = 0
     Width = 701
     Height = 581
-    ActivePage = tabJson
+    ActivePage = tabTree
     Align = alClient
     TabOrder = 0
     OnChange = PageControlChange
-    ExplicitWidth = 625
     object tabTree: TTabSheet
       Caption = 'Tree'
       object Splitter1: TSplitter
@@ -141,33 +139,43 @@ object frmMain: TfrmMain
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 312
-        object lblPath: TLabel
-          Left = 8
-          Top = 8
-          Width = 24
-          Height = 15
-          Caption = 'Path'
-        end
-        object btnApply: TButton
-          Left = 8
-          Top = 32
-          Width = 120
-          Height = 25
-          Caption = 'Apply'
-          TabOrder = 0
-          OnClick = btnApplyClick
-        end
-        object memoValue: TMemo
+        object PanelEditTop: TPanel
           Left = 0
           Top = 0
           Width = 388
-          Height = 551
+          Height = 64
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 0
+          object lblPath: TLabel
+            Left = 8
+            Top = 8
+            Width = 24
+            Height = 15
+            Caption = 'Path'
+          end
+          object btnApply: TButton
+            Left = 8
+            Top = 32
+            Width = 120
+            Height = 25
+            Caption = 'Apply'
+            TabOrder = 0
+            OnClick = btnApplyClick
+          end
+        end
+        object memoValue: TMemo
+          Left = 0
+          Top = 64
+          Width = 388
+          Height = 487
           Align = alClient
           ScrollBars = ssBoth
           TabOrder = 1
           WordWrap = False
-          ExplicitWidth = 312
+          OnChange = memoValueChange
+          OnExit = memoValueExit
+          OnKeyDown = memoValueKeyDown
         end
       end
     end
@@ -191,7 +199,6 @@ object frmMain: TfrmMain
         WantTabs = True
         WordWrap = False
         OnChange = memoJsonChange
-        ExplicitWidth = 952
       end
     end
   end
@@ -236,7 +243,6 @@ object frmMain: TfrmMain
         Value = 100.000000000000000000
       end>
     TabOrder = 2
-    ExplicitLeft = 680
     DesignSize = (
       280
       581)
@@ -248,9 +254,7 @@ object frmMain: TfrmMain
       Align = alClient
       TabOrder = 0
       OnKeyDown = edtFolderPathKeyDown
-      ExplicitLeft = 6
-      ExplicitTop = 25
-      ExplicitWidth = 248
+      ExplicitHeight = 23
     end
     object spbFolderPath: TSpeedButton
       Left = 253
@@ -273,10 +277,6 @@ object frmMain: TfrmMain
       ItemHeight = 15
       TabOrder = 1
       OnDblClick = lbFilesListDblClick
-      ExplicitLeft = 80
-      ExplicitTop = 152
-      ExplicitWidth = 121
-      ExplicitHeight = 97
     end
   end
   object MainMenu: TMainMenu
