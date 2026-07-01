@@ -3,17 +3,19 @@
 interface
 
 uses
-  System.SysUtils, System.JSON;
+  System.SysUtils, XSuperObject, XSuperJSON;
 
 type
   ESaveCodecError = class(Exception);
 
-function LoadSaveFromFile(const AFileName: string; out AJson: TJSONValue): string;
-procedure SaveSaveToFile(const AFileName: string; AJson: TJSONValue);
-function LoadSaveFromText(const ACompressed: string; out AJson: TJSONValue): string;
-function SaveSaveToText(AJson: TJSONValue): string;
-function FormatJson(AJson: TJSONValue): string;
-function ParseJsonText(const AText: string): TJSONValue;
+function LoadSaveFromFile(const AFileName: string; out AJson: ISuperObject): string;
+procedure SaveSaveToFile(const AFileName: string; AJson: ISuperObject);
+function LoadSaveFromText(const ACompressed: string; out AJson: ISuperObject): string;
+function SaveSaveToText(AJson: ISuperObject): string;
+function FormatJson(AJson: IJSONAncestor): string;
+function JsonToCompact(AJson: IJSONAncestor): string;
+function ParseJsonText(const AText: string): ISuperObject;
+function JsonRootAncestor(const Root: ISuperObject): IJSONAncestor;
 
 implementation
 
@@ -26,7 +28,59 @@ begin
   Result := S.Trim;
 end;
 
-function LoadSaveFromText(const ACompressed: string; out AJson: TJSONValue): string;
+function JsonToCompact(AJson: IJSONAncestor): string;
+var
+  Writer: TJSONWriter;
+begin
+  if AJson = nil then
+    Exit('');
+  if Supports(AJson, ISuperObject) then
+    Exit(ISuperObject(AJson).AsJSON(False))
+  else if Supports(AJson, ISuperArray) then
+    Exit(ISuperArray(AJson).AsJSON(False));
+  Writer := TJSONWriter.Create(False, False);
+  try
+    AJson.AsJSONString(Writer);
+    Result := Writer.ToString;
+  finally
+    Writer.Free;
+  end;
+end;
+
+function FormatJson(AJson: IJSONAncestor): string;
+var
+  Writer: TJSONWriter;
+begin
+  if AJson = nil then
+    Exit('');
+  if Supports(AJson, ISuperObject) then
+    Exit(ISuperObject(AJson).AsJSON(True))
+  else if Supports(AJson, ISuperArray) then
+    Exit(ISuperArray(AJson).AsJSON(True));
+  Writer := TJSONWriter.Create(True, False);
+  try
+    AJson.AsJSONString(Writer);
+    Result := Writer.ToString;
+  finally
+    Writer.Free;
+  end;
+end;
+
+function ParseJsonText(const AText: string): ISuperObject;
+begin
+  if Trim(AText) = '' then
+    raise ESaveCodecError.Create('Пустой JSON.');
+  Result := SO(AText);
+end;
+
+function JsonRootAncestor(const Root: ISuperObject): IJSONAncestor;
+begin
+  if Root = nil then
+    Exit(nil);
+  Result := (Root as TSuperObject).Self;
+end;
+
+function LoadSaveFromText(const ACompressed: string; out AJson: ISuperObject): string;
 var
   JsonText: string;
 begin
@@ -38,26 +92,25 @@ begin
   AJson := ParseJsonText(JsonText);
 end;
 
-function LoadSaveFromFile(const AFileName: string; out AJson: TJSONValue): string;
+function LoadSaveFromFile(const AFileName: string; out AJson: ISuperObject): string;
 var
   Bytes: TBytes;
 begin
-  { .save — одна строка Base64 (ASCII); UTF-8 с BOM портит данные }
   Bytes := TFile.ReadAllBytes(AFileName);
   Result := LoadSaveFromText(TEncoding.ANSI.GetString(Bytes), AJson);
 end;
 
-function SaveSaveToText(AJson: TJSONValue): string;
+function SaveSaveToText(AJson: ISuperObject): string;
 var
   JsonText: string;
 begin
   if AJson = nil then
     raise ESaveCodecError.Create('Нет данных для сохранения.');
-  JsonText := AJson.ToJSON;
+  JsonText := JsonToCompact(AJson);
   Result := LZCompressToBase64(JsonText);
 end;
 
-procedure SaveSaveToFile(const AFileName: string; AJson: TJSONValue);
+procedure SaveSaveToFile(const AFileName: string; AJson: ISuperObject);
 var
   OutText: string;
   Bytes: TBytes;
@@ -65,20 +118,6 @@ begin
   OutText := SaveSaveToText(AJson);
   Bytes := TEncoding.ANSI.GetBytes(OutText);
   TFile.WriteAllBytes(AFileName, Bytes);
-end;
-
-function FormatJson(AJson: TJSONValue): string;
-begin
-  if AJson = nil then
-    Exit('');
-  Result := AJson.Format(2);
-end;
-
-function ParseJsonText(const AText: string): TJSONValue;
-begin
-  Result := TJSONObject.ParseJSONValue(AText);
-  if Result = nil then
-    raise ESaveCodecError.Create('Некорректный JSON после распаковки.');
 end;
 
 end.

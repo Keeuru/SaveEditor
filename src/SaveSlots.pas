@@ -3,87 +3,89 @@
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, System.Generics.Collections;
+  System.SysUtils, System.Classes, System.Generics.Collections, XSuperObject, XSuperJSON;
 
-type
-  TSaveViewItem = record
-    Caption: string;
-    Value: TJSONValue;
-  end;
-
-procedure FillSaveViewList(ARoot: TJSONValue; AList: TStrings);
+procedure FillSaveViewList(ARoot: ISuperObject; AList: TStrings);
 
 implementation
 
-procedure AddView(AList: TStrings; const ACaption: string; AValue: TJSONValue);
+procedure AddView(AList: TStrings; const ACaption: string; AValue: IJSONAncestor);
 begin
-  AList.AddObject(ACaption, TObject(AValue));
+  AList.AddObject(ACaption, TObject(Pointer(AValue)));
 end;
 
-procedure AddSlotArray(AList: TStrings; const APrefix: string; Arr: TJSONArray);
+procedure AddSlotArray(AList: TStrings; const APrefix: string; Arr: ISuperArray);
 var
   I: Integer;
   Cap: string;
-  TitlePair: TJSONPair;
+  Item: IJSONAncestor;
+  ItemObj: ISuperObject;
+  ItemCast: ICast;
 begin
-  for I := 0 to Arr.Count - 1 do
+  for I := 0 to Arr.Length - 1 do
   begin
-    if Arr.Items[I] is TJSONObject then
+    Item := Arr.Ancestor[I];
+    ItemCast := TCast.Create(Item);
+    if ItemCast.DataType = dtObject then
     begin
       Cap := APrefix + ' ' + IntToStr(I);
-      TitlePair := TJSONObject(Arr.Items[I]).Get('title');
-      if (TitlePair <> nil) and (TitlePair.JsonValue is TJSONString) then
-        Cap := Cap + ' — ' + TJSONString(TitlePair.JsonValue).Value;
-      AddView(AList, Cap, Arr.Items[I]);
+      ItemObj := ItemCast.AsObject;
+      if ItemObj.Contains('title') then
+        Cap := Cap + ' — ' + ItemObj.S['title'];
+      AddView(AList, Cap, Item);
     end
     else
-      AddView(AList, APrefix + ' ' + IntToStr(I), Arr.Items[I]);
+      AddView(AList, APrefix + ' ' + IntToStr(I), Item);
   end;
 end;
 
-procedure FillSaveViewList(ARoot: TJSONValue; AList: TStrings);
+procedure FillSaveViewList(ARoot: ISuperObject; AList: TStrings);
 var
-  Obj: TJSONObject;
-  Pair: TJSONPair;
-  Arr: TJSONArray;
+  SlotsArr, SavesArr: ISuperArray;
   SkipKey: TDictionary<string, Byte>;
+  Key: string;
+  Val: IJSONAncestor;
+  ValCast: ICast;
 begin
   AList.Clear;
-  AddView(AList, 'Весь файл', ARoot);
-  if not (ARoot is TJSONObject) then
+  AddView(AList, 'Весь файл', JsonRootAncestor(ARoot));
+  if (ARoot = nil) or (ARoot.DataType <> dtObject) then
     Exit;
 
-  Obj := TJSONObject(ARoot);
   SkipKey := TDictionary<string, Byte>.Create;
   try
-    Pair := Obj.Get('slots');
-    if (Pair <> nil) and (Pair.JsonValue is TJSONArray) then
+    if ARoot.Contains('slots') then
     begin
-      Arr := TJSONArray(Pair.JsonValue);
-      if Arr.Count > 0 then
+      SlotsArr := ARoot.A['slots'];
+      if SlotsArr.Length > 0 then
       begin
         SkipKey.Add('slots', 0);
-        AddSlotArray(AList, 'Слот', Arr);
+        AddSlotArray(AList, 'Слот', SlotsArr);
       end;
     end;
 
-    Pair := Obj.Get('saves');
-    if (Pair <> nil) and (Pair.JsonValue is TJSONArray) then
+    if ARoot.Contains('saves') then
     begin
-      Arr := TJSONArray(Pair.JsonValue);
-      if Arr.Count > 0 then
+      SavesArr := ARoot.A['saves'];
+      if SavesArr.Length > 0 then
       begin
         SkipKey.Add('saves', 0);
-        AddSlotArray(AList, 'Save', Arr);
+        AddSlotArray(AList, 'Save', SavesArr);
       end;
     end;
 
-    for Pair in Obj do
+    ARoot.First;
+    while not ARoot.EoF do
     begin
-      if SkipKey.ContainsKey(Pair.JsonString.Value) then
-        Continue;
-      if (Pair.JsonValue is TJSONObject) or (Pair.JsonValue is TJSONArray) then
-        AddView(AList, Pair.JsonString.Value, Pair.JsonValue);
+      Key := ARoot.CurrentKey;
+      if not SkipKey.ContainsKey(Key) then
+      begin
+        Val := ARoot.CurrentValue;
+        ValCast := TCast.Create(Val);
+        if ValCast.DataType in [dtObject, dtArray] then
+          AddView(AList, Key, Val);
+      end;
+      ARoot.Next;
     end;
   finally
     SkipKey.Free;

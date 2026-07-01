@@ -3,10 +3,11 @@
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, System.JSON,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Menus, Vcl.AppEvnts, SaveCodec, SaveSlots, Vcl.Buttons, Vcl.WinXCtrls, FontAwesome;
+  Vcl.Menus, Vcl.AppEvnts, XSuperObject, XSuperJSON, SaveCodec, SaveSlots, Vcl.Buttons,
+  Vcl.WinXCtrls, FontAwesome;
 
 type
   TfrmMain = class(TForm)
@@ -83,7 +84,7 @@ type
     procedure edtFolderPathEnter(Sender: TObject);
     procedure OpenFolderClick(Sender: TObject);
   private
-    FJsonRoot: TJSONValue;
+    FJsonRoot: ISuperObject;
     FNodeKeys: TDictionary<TTreeNode, string>;
     FFileName: string;
     FModified: Boolean;
@@ -102,15 +103,15 @@ type
     function ConfirmSaveIfModified: Boolean;
     procedure SyncJsonMemo;
     procedure RefreshViewCombo;
-    function GetViewRoot: TJSONValue;
+    function GetViewRoot: IJSONAncestor;
     procedure RebuildTree;
-    procedure BuildTreeNode(ANode: TTreeNode; AValue: TJSONValue; const AName: string);
-    function SelectedJsonValue: TJSONValue;
+    procedure BuildTreeNode(ANode: TTreeNode; AValue: IJSONAncestor; const AName: string);
+    function SelectedJsonValue: IJSONAncestor;
     procedure ShowNodeValue(ANode: TTreeNode);
-    procedure UpdateNodeCaption(ANode: TTreeNode; AValue: TJSONValue);
+    procedure UpdateNodeCaption(ANode: TTreeNode; AValue: IJSONAncestor);
     function TreeNodePath(ANode: TTreeNode): string;
-    function ReplaceNodeJsonValue(ANode: TTreeNode; ANewValue: TJSONValue): Boolean;
-    function ApplyValueFromMemo(AValue: TJSONValue; ANode: TTreeNode): Boolean;
+    function ReplaceNodeJsonValue(ANode: TTreeNode; ANewValue: IJSONAncestor): Boolean;
+    function ApplyValueFromMemo(AValue: IJSONAncestor; ANode: TTreeNode): Boolean;
     function ApplyMemoIfDirty: Boolean;
     function NodeMatchesSearch(ANode: TTreeNode; const ASearch: string): Boolean;
     procedure CollectNodes(ANode: TTreeNode; AList: TList<TTreeNode>);
@@ -135,6 +136,13 @@ var
 implementation
 
 {$R *.dfm}
+
+function NodeJson(ANode: TTreeNode): IJSONAncestor;
+begin
+  Result := nil;
+  if (ANode <> nil) and (ANode.Data <> nil) then
+    Result := IJSONAncestor(ANode.Data);
+end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
@@ -207,7 +215,7 @@ end;
 
 procedure TfrmMain.ClearDocument;
 begin
-  FreeAndNil(FJsonRoot);
+  FJsonRoot := nil;
   FFileName := '';
   FLastSearchNode := nil;
   FMemoNode := nil;
@@ -228,15 +236,15 @@ begin
   SetModified(False);
 end;
 
-function TfrmMain.GetViewRoot: TJSONValue;
+function TfrmMain.GetViewRoot: IJSONAncestor;
 begin
-  Result := FJsonRoot;
-  if (FJsonRoot = nil) or (cboView.ItemIndex < 0) then
+  Result := nil;
+  if FJsonRoot = nil then
     Exit;
-  if cboView.ItemIndex = 0 then
-    Exit;
+  if (cboView.ItemIndex < 0) or (cboView.ItemIndex = 0) then
+    Exit(JsonRootAncestor(FJsonRoot));
   if cboView.Items.Objects[cboView.ItemIndex] <> nil then
-    Result := TJSONValue(cboView.Items.Objects[cboView.ItemIndex]);
+    Result := IJSONAncestor(Pointer(cboView.Items.Objects[cboView.ItemIndex]));
 end;
 
 procedure TfrmMain.RefreshViewCombo;
@@ -262,7 +270,7 @@ end;
 
 procedure TfrmMain.SyncJsonMemo;
 var
-  View: TJSONValue;
+  View: IJSONAncestor;
 begin
   View := GetViewRoot;
   if View = nil then
@@ -271,7 +279,7 @@ begin
   begin
     FUpdating := True;
     try
-      if (cboView.ItemIndex > 0) and (View <> FJsonRoot) then
+      if (cboView.ItemIndex > 0) and (Pointer(View) <> Pointer(JsonRootAncestor(FJsonRoot))) then
         memoJson.Lines.Text := FormatJson(View)
       else
         memoJson.Lines.Text := FormatJson(FJsonRoot);
@@ -282,14 +290,15 @@ begin
   end;
 end;
 
-procedure TfrmMain.BuildTreeNode(ANode: TTreeNode; AValue: TJSONValue; const AName: string);
+procedure TfrmMain.BuildTreeNode(ANode: TTreeNode; AValue: IJSONAncestor; const AName: string);
 var
   I: Integer;
   Child: TTreeNode;
-  Pair: TJSONPair;
-  Obj: TJSONObject;
-  Arr: TJSONArray;
+  Obj: ISuperObject;
+  Arr: ISuperArray;
   LabelText: string;
+  ValueCast: ICast;
+  Key: string;
 begin
   if AValue = nil then
     Exit;
@@ -299,128 +308,128 @@ begin
   else
     LabelText := '';
 
-  if AValue is TJSONObject then
-  begin
-    Obj := TJSONObject(AValue);
-    if AName = '' then
-      ANode.Text := 'Object {' + IntToStr(Obj.Count) + '}'
-    else
-      ANode.Text := LabelText + '{' + IntToStr(Obj.Count) + '}';
-    for Pair in Obj do
-    begin
-      Child := TreeJson.Items.AddChild(ANode, Pair.JsonString.Value);
-      FNodeKeys.Add(Child, Pair.JsonString.Value);
-      BuildTreeNode(Child, Pair.JsonValue, Pair.JsonString.Value);
-    end;
-  end
-  else if AValue is TJSONArray then
-  begin
-    Arr := TJSONArray(AValue);
-    if AName = '' then
-      ANode.Text := 'Array [' + IntToStr(Arr.Count) + ']'
-    else
-      ANode.Text := LabelText + '[' + IntToStr(Arr.Count) + ']';
-    for I := 0 to Arr.Count - 1 do
-    begin
-      Child := TreeJson.Items.AddChild(ANode, '[' + IntToStr(I) + ']');
-      FNodeKeys.Add(Child, IntToStr(I));
-      BuildTreeNode(Child, Arr.Items[I], '[' + IntToStr(I) + ']');
-    end;
-  end
-  else if AValue is TJSONString then
-    ANode.Text := LabelText + '"' + TJSONString(AValue).Value + '"'
-  else if AValue is TJSONNumber then
-    ANode.Text := LabelText + TJSONNumber(AValue).ToString
-  else if AValue is TJSONTrue then
-    ANode.Text := LabelText + 'true'
-  else if AValue is TJSONFalse then
-    ANode.Text := LabelText + 'false'
-  else if AValue is TJSONNull then
-    ANode.Text := LabelText + 'null'
+  ValueCast := TCast.Create(AValue);
+  case ValueCast.DataType of
+    dtObject:
+      begin
+        Obj := ValueCast.AsObject;
+        if AName = '' then
+          ANode.Text := 'Object {' + IntToStr(Obj.Count) + '}'
+        else
+          ANode.Text := LabelText + '{' + IntToStr(Obj.Count) + '}';
+        Obj.First;
+        while not Obj.EoF do
+        begin
+          Key := Obj.CurrentKey;
+          Child := TreeJson.Items.AddChild(ANode, Key);
+          FNodeKeys.Add(Child, Key);
+          BuildTreeNode(Child, Obj.CurrentValue, Key);
+          Obj.Next;
+        end;
+      end;
+    dtArray:
+      begin
+        Arr := ValueCast.AsArray;
+        if AName = '' then
+          ANode.Text := 'Array [' + IntToStr(Arr.Length) + ']'
+        else
+          ANode.Text := LabelText + '[' + IntToStr(Arr.Length) + ']';
+        for I := 0 to Arr.Length - 1 do
+        begin
+          Child := TreeJson.Items.AddChild(ANode, '[' + IntToStr(I) + ']');
+          FNodeKeys.Add(Child, IntToStr(I));
+          BuildTreeNode(Child, Arr.Ancestor[I], '[' + IntToStr(I) + ']');
+        end;
+      end;
+    dtString:
+      ANode.Text := LabelText + '"' + ValueCast.AsString + '"';
+    dtInteger:
+      ANode.Text := LabelText + IntToStr(ValueCast.AsInteger);
+    dtFloat:
+      ANode.Text := LabelText + FloatToStr(ValueCast.AsFloat);
+    dtBoolean:
+      if ValueCast.AsBoolean then
+        ANode.Text := LabelText + 'true'
+      else
+        ANode.Text := LabelText + 'false';
+    dtNull:
+      ANode.Text := LabelText + 'null';
   else
-    ANode.Text := LabelText + AValue.ToJSON;
+    ANode.Text := LabelText + JsonToCompact(AValue);
+  end;
 
   if ANode.Data = nil then
-    ANode.Data := AValue;
+    ANode.Data := Pointer(AValue);
 end;
 
-function TfrmMain.ReplaceNodeJsonValue(ANode: TTreeNode; ANewValue: TJSONValue): Boolean;
+function TfrmMain.ReplaceNodeJsonValue(ANode: TTreeNode; ANewValue: IJSONAncestor): Boolean;
 var
   ParentNode: TTreeNode;
-  ParentVal: TJSONValue;
-  Obj: TJSONObject;
-  Arr: TJSONArray;
-  Pair: TJSONPair;
+  ParentVal: IJSONAncestor;
+  ParentCast: ICast;
+  Obj: ISuperObject;
+  Arr: ISuperArray;
   Key: string;
   Idx, I: Integer;
-  OldVal: TJSONValue;
-  Snapshot: TList<TJSONValue>;
+  Snapshot: TList<IJSONAncestor>;
 begin
   Result := False;
   if (ANode = nil) or (ANewValue = nil) then
-  begin
-    ANewValue.Free;
     Exit;
-  end;
 
   ParentNode := ANode.Parent;
   if ParentNode = nil then
   begin
-    FreeAndNil(FJsonRoot);
-    FJsonRoot := ANewValue;
-    ANode.Data := ANewValue;
+    FJsonRoot := SO(JsonToCompact(ANewValue));
+    ANode.Data := Pointer(JsonRootAncestor(FJsonRoot));
     RefreshViewCombo;
     Exit(True);
   end;
 
-  ParentVal := TJSONValue(ParentNode.Data);
-  if ParentVal is TJSONObject then
+  ParentVal := NodeJson(ParentNode);
+  if ParentVal = nil then
+    Exit;
+
+  ParentCast := TCast.Create(ParentVal);
+  if ParentCast.DataType = dtObject then
   begin
-    Obj := TJSONObject(ParentVal);
+    Obj := ParentCast.AsObject;
     if not FNodeKeys.TryGetValue(ANode, Key) then
       Exit;
-    Pair := Obj.RemovePair(Key);
-    if Pair = nil then
-      Exit;
-    Pair.Free;
-    Obj.AddPair(Key, ANewValue);
-    ANode.Data := ANewValue;
+    Obj.Remove(Key);
+    Obj.Add(Key, ANewValue);
+    ANode.Data := Pointer(ANewValue);
     Result := True;
   end
-  else if ParentVal is TJSONArray then
+  else if ParentCast.DataType = dtArray then
   begin
-    Arr := TJSONArray(ParentVal);
+    Arr := ParentCast.AsArray;
     if not FNodeKeys.TryGetValue(ANode, Key) then
       Exit;
     if not TryStrToInt(Key, Idx) then
       Exit;
-    if (Idx < 0) or (Idx >= Arr.Count) then
+    if (Idx < 0) or (Idx >= Arr.Length) then
       Exit;
-    Snapshot := TList<TJSONValue>.Create;
+    Snapshot := TList<IJSONAncestor>.Create;
     try
-      for I := 0 to Arr.Count - 1 do
-        Snapshot.Add(Arr.Items[I]);
-      OldVal := Snapshot[Idx];
+      for I := 0 to Arr.Length - 1 do
+        Snapshot.Add(Arr.Ancestor[I]);
       Snapshot[Idx] := ANewValue;
-      OldVal.Free;
-      while Arr.Count > 0 do
-        Arr.Remove(0);
+      Arr.Clear;
       for I := 0 to Snapshot.Count - 1 do
-        Arr.AddElement(Snapshot[I]);
+        Arr.Add(Snapshot[I]);
     finally
       Snapshot.Free;
     end;
-    ANode.Data := ANewValue;
+    ANode.Data := Pointer(ANewValue);
     Result := True;
-  end
-  else
-    ANewValue.Free;
+  end;
 end;
 
 procedure TfrmMain.RebuildTree;
 var
   Root: TTreeNode;
-  View: TJSONValue;
+  View: IJSONAncestor;
 begin
   FLastSearchNode := nil;
   TreeJson.Items.BeginUpdate;
@@ -442,16 +451,15 @@ begin
   end;
 end;
 
-function TfrmMain.SelectedJsonValue: TJSONValue;
+function TfrmMain.SelectedJsonValue: IJSONAncestor;
 begin
-  Result := nil;
-  if (TreeJson.Selected <> nil) and (TreeJson.Selected.Data <> nil) then
-    Result := TJSONValue(TreeJson.Selected.Data);
+  Result := NodeJson(TreeJson.Selected);
 end;
 
 procedure TfrmMain.ShowNodeValue(ANode: TTreeNode);
 var
-  Val: TJSONValue;
+  Val: IJSONAncestor;
+  ValueCast: ICast;
 begin
   memoValue.Clear;
   btnApply.Enabled := False;
@@ -464,7 +472,7 @@ begin
   end;
 
   lblPath.Caption := TreeNodePath(ANode);
-  Val := TJSONValue(ANode.Data);
+  Val := NodeJson(ANode);
   if Val = nil then
   begin
     FMemoNode := ANode;
@@ -474,7 +482,8 @@ begin
 
   FUpdating := True;
   try
-    if (Val is TJSONObject) or (Val is TJSONArray) then
+    ValueCast := TCast.Create(Val);
+    if ValueCast.DataType in [dtObject, dtArray] then
     begin
       memoValue.Lines.Text := FormatJson(Val);
       memoValue.ReadOnly := True;
@@ -483,10 +492,10 @@ begin
     else
     begin
       memoValue.ReadOnly := False;
-      if Val is TJSONString then
-        memoValue.Text := TJSONString(Val).Value
+      if ValueCast.DataType = dtString then
+        memoValue.Text := ValueCast.AsString
       else
-        memoValue.Text := Val.ToJSON;
+        memoValue.Text := JsonToCompact(Val);
       btnApply.Enabled := True;
     end;
   finally
@@ -517,10 +526,11 @@ begin
   end;
 end;
 
-procedure TfrmMain.UpdateNodeCaption(ANode: TTreeNode; AValue: TJSONValue);
+procedure TfrmMain.UpdateNodeCaption(ANode: TTreeNode; AValue: IJSONAncestor);
 var
   S: string;
   P: Integer;
+  ValueCast: ICast;
 begin
   if (ANode = nil) or (AValue = nil) then
     Exit;
@@ -530,74 +540,95 @@ begin
     S := Copy(S, 1, P + 1)
   else
     S := '';
-  if AValue is TJSONString then
-    ANode.Text := S + '"' + TJSONString(AValue).Value + '"'
-  else if AValue is TJSONNumber then
-    ANode.Text := S + TJSONNumber(AValue).ToString
-  else if AValue is TJSONTrue then
-    ANode.Text := S + 'true'
-  else if AValue is TJSONFalse then
-    ANode.Text := S + 'false'
-  else if AValue is TJSONNull then
-    ANode.Text := S + 'null';
+  ValueCast := TCast.Create(AValue);
+  case ValueCast.DataType of
+    dtString:
+      ANode.Text := S + '"' + ValueCast.AsString + '"';
+    dtInteger:
+      ANode.Text := S + IntToStr(ValueCast.AsInteger);
+    dtFloat:
+      ANode.Text := S + FloatToStr(ValueCast.AsFloat);
+    dtBoolean:
+      if ValueCast.AsBoolean then
+        ANode.Text := S + 'true'
+      else
+        ANode.Text := S + 'false';
+    dtNull:
+      ANode.Text := S + 'null';
+  end;
 end;
 
-function TfrmMain.ApplyValueFromMemo(AValue: TJSONValue; ANode: TTreeNode): Boolean;
+function TfrmMain.ApplyValueFromMemo(AValue: IJSONAncestor; ANode: TTreeNode): Boolean;
 var
   S: string;
   Num: Double;
-  NewVal: TJSONValue;
+  IntVal: Int64;
+  NewVal: IJSONAncestor;
+  ValueCast: ICast;
 begin
   Result := False;
   if (AValue = nil) or (ANode = nil) then
     Exit;
 
   S := memoValue.Text;
+  ValueCast := TCast.Create(AValue);
 
-  if AValue is TJSONString then
-    NewVal := TJSONString.Create(S)
-  else if AValue is TJSONNumber then
-  begin
-    if not TryStrToFloat(StringReplace(S, '.', FormatSettings.DecimalSeparator, []), Num) then
-    begin
-      MessageDlg('Некорректное число.', mtError, [mbOK], 0);
-      Exit;
-    end;
-    NewVal := TJSONNumber.Create(Num);
-  end
-  else if (AValue is TJSONTrue) or (AValue is TJSONFalse) then
-  begin
-    MessageDlg('Для логических значений используйте поле JSON.', mtInformation, [mbOK], 0);
-    Exit;
-  end
-  else if AValue is TJSONNull then
-  begin
-    if not SameText(S, 'null') then
-    begin
-      MessageDlg('Для null используйте поле JSON.', mtInformation, [mbOK], 0);
-      Exit;
-    end;
-    NewVal := TJSONNull.Create;
-  end
+  case ValueCast.DataType of
+    dtString:
+      NewVal := TJSONString.Create(S);
+    dtInteger:
+      begin
+        if TryStrToInt64(StringReplace(S, '.', FormatSettings.DecimalSeparator, []), IntVal) then
+          NewVal := TJSONInteger.Create(IntVal)
+        else if TryStrToFloat(StringReplace(S, '.', FormatSettings.DecimalSeparator, []), Num) then
+          NewVal := TJSONInteger.Create(Trunc(Num))
+        else
+        begin
+          MessageDlg('Некорректное число.', mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
+    dtFloat:
+      begin
+        if not TryStrToFloat(StringReplace(S, '.', FormatSettings.DecimalSeparator, []), Num) then
+        begin
+          MessageDlg('Некорректное число.', mtError, [mbOK], 0);
+          Exit;
+        end;
+        NewVal := TJSONFloat.Create(Num);
+      end;
+    dtBoolean:
+      begin
+        MessageDlg('Для логических значений используйте поле JSON.', mtInformation, [mbOK], 0);
+        Exit;
+      end;
+    dtNull:
+      begin
+        if not SameText(S, 'null') then
+        begin
+          MessageDlg('Для null используйте поле JSON.', mtInformation, [mbOK], 0);
+          Exit;
+        end;
+        NewVal := TJSONNull.Create(True);
+      end;
   else
     Exit;
+  end;
 
   Result := ReplaceNodeJsonValue(ANode, NewVal);
-  if not Result then
-    NewVal.Free;
 end;
 
 function TfrmMain.ApplyMemoIfDirty: Boolean;
 var
   Node: TTreeNode;
-  Val: TJSONValue;
+  Val: IJSONAncestor;
 begin
   Result := True;
   if not FMemoDirty or (FMemoNode = nil) or memoValue.ReadOnly then
     Exit;
 
   Node := FMemoNode;
-  Val := TJSONValue(Node.Data);
+  Val := NodeJson(Node);
   if Val = nil then
   begin
     FMemoDirty := False;
@@ -607,7 +638,7 @@ begin
   if not ApplyValueFromMemo(Val, Node) then
     Exit(False);
 
-  UpdateNodeCaption(Node, TJSONValue(Node.Data));
+  UpdateNodeCaption(Node, NodeJson(Node));
   SyncJsonMemo;
   SetModified(True);
   FMemoDirty := False;
@@ -701,26 +732,17 @@ begin
 end;
 
 procedure TfrmMain.ApplyJsonFromText(const AJsonText: string);
-var
-  NewRoot: TJSONValue;
 begin
-  NewRoot := ParseJsonText(AJsonText);
-  try
-    FreeAndNil(FJsonRoot);
-    FJsonRoot := NewRoot;
-    NewRoot := nil;
-    RefreshViewCombo;
-    SyncJsonMemo;
-    RebuildTree;
-    SetModified(True);
-  finally
-    NewRoot.Free;
-  end;
+  FJsonRoot := ParseJsonText(AJsonText);
+  RefreshViewCombo;
+  SyncJsonMemo;
+  RebuildTree;
+  SetModified(True);
 end;
 
 procedure TfrmMain.LoadDocument(const AFileName: string);
 var
-  Json: TJSONValue;
+  Json: ISuperObject;
 begin
   if not ApplyMemoIfDirty then
     Exit;
@@ -737,7 +759,7 @@ begin
   except
     on E: Exception do
     begin
-      Json.Free;
+      Json := nil;
       MessageDlg('Ошибка открытия: ' + E.Message, mtError, [mbOK], 0);
     end;
   end;
@@ -756,7 +778,6 @@ begin
         MessageDlg('Отображается выбранный фрагмент. ' + 'Для сохранения всего .save выберите «Просмотр» на «Весь файл» или примените правки через дерево.', mtInformation, [mbOK], 0)
       else
       begin
-        FreeAndNil(FJsonRoot);
         FJsonRoot := ParseJsonText(memoJson.Text);
         RefreshViewCombo;
         RebuildTree;
@@ -830,7 +851,7 @@ end;
 
 procedure TfrmMain.ExportJsonClick(Sender: TObject);
 var
-  View: TJSONValue;
+  View: IJSONAncestor;
   BaseName, OutName: string;
 begin
   if FJsonRoot = nil then
@@ -941,7 +962,7 @@ end;
 
 procedure TfrmMain.mnuFormatJsonClick(Sender: TObject);
 var
-  View: TJSONValue;
+  View: IJSONAncestor;
 begin
   View := GetViewRoot;
   if View = nil then
@@ -956,29 +977,21 @@ begin
 end;
 
 procedure TfrmMain.mnuReloadTreeClick(Sender: TObject);
-var
-  Parsed: TJSONValue;
 begin
   if FJsonRoot = nil then
     Exit;
   try
-    Parsed := ParseJsonText(memoJson.Text);
-    try
-      if cboView.ItemIndex = 0 then
-      begin
-        FreeAndNil(FJsonRoot);
-        FJsonRoot := Parsed;
-        Parsed := nil;
-        RefreshViewCombo;
-      end
-      else
-        MessageDlg('Применение JSON из фрагмента к полному файлу пока не поддерживается. ' + 'Выберите «Весь файл» или правьте через дерево.', mtInformation, [mbOK], 0);
+    if cboView.ItemIndex = 0 then
+    begin
+      FJsonRoot := ParseJsonText(memoJson.Text);
+      RefreshViewCombo;
       RebuildTree;
       SetModified(True);
       FJsonMemoDirty := False;
-    finally
-      Parsed.Free;
-    end;
+    end
+    else
+      MessageDlg('Применение JSON из фрагмента к полному файлу пока не поддерживается. ' +
+        'Выберите «Весь файл» или правьте через дерево.', mtInformation, [mbOK], 0);
   except
     on E: Exception do
       MessageDlg('JSON: ' + E.Message, mtError, [mbOK], 0);

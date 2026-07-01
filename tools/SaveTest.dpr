@@ -3,12 +3,13 @@ program SaveTest;
 {$APPTYPE CONSOLE}
 
 uses
-  System.SysUtils, System.JSON,
+  System.SysUtils,
+  XSuperObject,
   LZString in '..\src\LZString.pas',
   SaveCodec in '..\src\SaveCodec.pas';
 
 var
-  Json: TJSONValue;
+  Json: ISuperObject;
   Text, Recompressed: string;
   Fn: string;
 begin
@@ -24,11 +25,10 @@ begin
     WriteLn(Copy(Text, 1, 120));
     Recompressed := SaveSaveToText(Json);
     WriteLn('Recompressed length=', Length(Recompressed));
-    Json.Free;
     Json := nil;
     LoadSaveFromText(Recompressed, Json);
-    WriteLn('Roundtrip JSON OK, root=', Json.ClassName);
-    Json.Free;
+    WriteLn('Roundtrip JSON OK, datatype=', Ord(Json.DataType));
+    Json := nil;
     WriteLn('SUCCESS');
   except
     on E: Exception do
