@@ -1231,14 +1231,14 @@ begin
   if not RegisterFontAwesome then
     Exit;
 
-  SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18);
-  SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Показать панель папки', 18);
-  SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18);
-  SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18);
-  SetupSpeedButtonIcon(spbExportJson, fa_download, 'Экспорт в JSON...', 18);
-  SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18);
-  SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18);
-  SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14);
+  SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18, clNavy);
+  SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Показать панель папки', 18, clTeal);
+  SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18, clGreen);
+  SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18, TColor($0080B000));
+  SetupSpeedButtonIcon(spbExportJson, fa_download, 'Экспорт в JSON...', 18, clPurple);
+  SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18, clMaroon);
+  SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clGray);
+  SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14, TColor($0000A0D0));
 end;
 
 end.

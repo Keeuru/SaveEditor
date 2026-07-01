@@ -3,10 +3,11 @@ unit FontAwesome;
 interface
 
 uses
-  Vcl.Buttons;
+  Vcl.Buttons, Vcl.Graphics;
 
 const
   cFontAwesomeName = 'FontAwesome';
+  cFaIconColorDefault = clBtnText;
   fa_file_o = WideChar($F016);
   fa_folder = WideChar($F07B);
   fa_folder_open = WideChar($F07C);
@@ -18,7 +19,10 @@ const
 
 function RegisterFontAwesome: Boolean;
 
-procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string; AFontSize: Integer = 16);
+procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string;
+  AFontSize: Integer = 16; AIconColor: TColor = cFaIconColorDefault);
+
+procedure SetSpeedButtonIconColor(AButton: TSpeedButton; AIconColor: TColor);
 
 implementation
 
@@ -57,15 +61,24 @@ begin
   Result := False;
 end;
 
-procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string; AFontSize: Integer);
+procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string;
+  AFontSize: Integer; AIconColor: TColor);
 begin
+  AButton.ParentFont := False;
   AButton.Font.Name := cFontAwesomeName;
   AButton.Font.Charset := DEFAULT_CHARSET;
   AButton.Font.Size := AFontSize;
   AButton.Font.Style := [];
+  AButton.Font.Color := AIconColor;
   AButton.Caption := string(AIcon);
   AButton.Hint := AHint;
   AButton.ShowHint := True;
+end;
+
+procedure SetSpeedButtonIconColor(AButton: TSpeedButton; AIconColor: TColor);
+begin
+  AButton.ParentFont := False;
+  AButton.Font.Color := AIconColor;
 end;
 
 initialization
