@@ -12,6 +12,7 @@ object frmMain: TfrmMain
   Font.Style = []
   Menu = MainMenu
   Position = poScreenCenter
+  DoubleBuffered = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
@@ -401,14 +402,18 @@ object frmMain: TfrmMain
         OnClick = btnApplyClick
       end
     end
-    object memoValue: TMemo
+    object memoValue: TRichEdit
       Left = 0
       Top = 82
       Width = 300
       Height = 679
       Align = alClient
+      BorderStyle = bsNone
+      HideSelection = False
+      PlainText = True
       ScrollBars = ssBoth
       TabOrder = 1
+      Transparent = True
       WordWrap = False
       OnChange = memoValueChange
       OnExit = memoValueExit
@@ -416,16 +421,34 @@ object frmMain: TfrmMain
       ExplicitWidth = 647
     end
   end
-  object memoJson: TMemo
+  object memoJson: TRichEdit
     Left = 300
     Top = 0
     Width = 344
     Height = 761
     Align = alClient
+    BorderStyle = bsNone
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Consolas'
+    Font.Style = []
+    HideSelection = False
+    ParentFont = False
+    PlainText = True
+    ScrollBars = ssBoth
     TabOrder = 5
+    Transparent = True
     WordWrap = False
     OnChange = memoJsonChange
     ExplicitWidth = 300
+  end
+  object imgBackground: TImage
+    Left = 720
+    Top = 320
+    Width = 105
+    Height = 105
+    Visible = False
   end
   object MainMenu: TMainMenu
     Left = 112

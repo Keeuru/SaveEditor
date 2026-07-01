@@ -28,9 +28,9 @@ type
     TreeJson: TTreeView;
     PanelEdit: TPanel;
     lblPath: TLabel;
-    memoValue: TMemo;
+    memoValue: TRichEdit;
     btnApply: TButton;
-    memoJson: TMemo;
+    memoJson: TRichEdit;
     mnuEdit: TMenuItem;
     mnuFind: TMenuItem;
     mnuFindNext: TMenuItem;
@@ -53,6 +53,7 @@ type
     spbOpenFile: TSpeedButton;
     spbExitApp: TSpeedButton;
     Splitter1: TSplitter;
+    imgBackground: TImage;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure AppActivate(Sender: TObject);
@@ -104,7 +105,6 @@ type
     function GetViewRoot: IJSONAncestor;
     procedure RebuildTree;
     procedure BuildTreeNode(ANode: TTreeNode; AValue: IJSONAncestor; const AName: string);
-    function SelectedJsonValue: IJSONAncestor;
     procedure ShowNodeValue(ANode: TTreeNode);
     procedure UpdateNodeCaption(ANode: TTreeNode; AValue: IJSONAncestor);
     function TreeNodePath(ANode: TTreeNode): string;
@@ -124,8 +124,14 @@ type
     procedure OnApplicationActivated;
     procedure SetupSpeedButtons;
     procedure UpdateFolderPanelVisibility;
+    procedure SetupBackgroundImage;
+    procedure ApplyBackgroundToControls;
+    procedure SetupRichEdit(ARichEdit: TRichEdit);
+    procedure DrawFormBackground(DC: HDC; const ARect: TRect);
+    function ResolveBackgroundImagePath: string;
   protected
     procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
+    procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
   public
   end;
 
@@ -134,7 +140,13 @@ var
 
 implementation
 
+uses
+  Vcl.Imaging.jpeg;
+
 {$R *.dfm}
+
+const
+  cBackgroundImagePath = 'D:\DelphiProjects\Images\background.jpg';
 
 function NodeJson(ANode: TTreeNode): IJSONAncestor;
 begin
@@ -156,6 +168,8 @@ begin
   JsonSaveDialog.DefaultExt := 'json';
   JsonOpenDialog.Filter := JsonSaveDialog.Filter;
   ClearDocument;
+  SetupBackgroundImage;
+  ApplyBackgroundToControls;
   SetupSpeedButtons;
   UpdateFolderPanelVisibility;
   if ParamCount >= 1 then
@@ -445,11 +459,6 @@ begin
   finally
     TreeJson.Items.EndUpdate;
   end;
-end;
-
-function TfrmMain.SelectedJsonValue: IJSONAncestor;
-begin
-  Result := NodeJson(TreeJson.Selected);
 end;
 
 procedure TfrmMain.ShowNodeValue(ANode: TTreeNode);
@@ -1244,6 +1253,115 @@ begin
     SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Скрыть панель папки', 18, clTeal)
   else
     SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Показать панель папки', 18, clGray);
+end;
+
+function TfrmMain.ResolveBackgroundImagePath: string;
+var
+  Path: string;
+  Paths: TArray<string>;
+begin
+  Result := '';
+  Paths := TArray<string>.Create(
+    cBackgroundImagePath,
+    ExtractFilePath(Application.ExeName) + 'images\background.jpg',
+    ExtractFilePath(ParamStr(0)) + '..\images\background.jpg',
+    ExtractFilePath(ParamStr(0)) + '..\..\Images\background.jpg'
+  );
+  for Path in Paths do
+    if FileExists(Path) then
+      Exit(Path);
+end;
+
+procedure TfrmMain.SetupBackgroundImage;
+var
+  Path: string;
+begin
+  Path := ResolveBackgroundImagePath;
+  if Path = '' then
+    Exit;
+  imgBackground.Picture.LoadFromFile(Path);
+  imgBackground.Visible := False;
+  Invalidate;
+end;
+
+procedure TfrmMain.ApplyBackgroundToControls;
+
+  procedure ApplyToPanels(ARoot: TWinControl);
+  var
+    I: Integer;
+    Pnl: TPanel;
+  begin
+    for I := 0 to ARoot.ControlCount - 1 do
+    begin
+      if ARoot.Controls[I] is TPanel then
+      begin
+        Pnl := TPanel(ARoot.Controls[I]);
+        Pnl.ParentBackground := True;
+        Pnl.ParentColor := True;
+        Pnl.BevelOuter := bvNone;
+      end;
+      if ARoot.Controls[I] is TWinControl then
+        ApplyToPanels(TWinControl(ARoot.Controls[I]));
+    end;
+  end;
+
+begin
+  ApplyToPanels(Self);
+  SetupRichEdit(memoJson);
+  SetupRichEdit(memoValue);
+end;
+
+procedure TfrmMain.SetupRichEdit(ARichEdit: TRichEdit);
+begin
+  ARichEdit.PlainText := True;
+  ARichEdit.BorderStyle := bsNone;
+  ARichEdit.Transparent := True;
+  ARichEdit.ScrollBars := ssBoth;
+  ARichEdit.WordWrap := False;
+  ARichEdit.HideSelection := False;
+end;
+
+procedure TfrmMain.DrawFormBackground(DC: HDC; const ARect: TRect);
+var
+  Bmp: TBitmap;
+  SrcR: TRect;
+  DstW, DstH, SrcW, SrcH: Integer;
+begin
+  if (imgBackground.Picture.Graphic = nil) or imgBackground.Picture.Graphic.Empty then
+    Exit;
+  if (ClientWidth = 0) or (ClientHeight = 0) then
+    Exit;
+
+  Bmp := TBitmap.Create;
+  try
+    Bmp.Assign(imgBackground.Picture.Graphic);
+    DstW := ARect.Right - ARect.Left;
+    DstH := ARect.Bottom - ARect.Top;
+    SrcR.Left := MulDiv(ARect.Left, Bmp.Width, ClientWidth);
+    SrcR.Top := MulDiv(ARect.Top, Bmp.Height, ClientHeight);
+    SrcR.Right := MulDiv(ARect.Right, Bmp.Width, ClientWidth);
+    SrcR.Bottom := MulDiv(ARect.Bottom, Bmp.Height, ClientHeight);
+    SrcW := SrcR.Right - SrcR.Left;
+    SrcH := SrcR.Bottom - SrcR.Top;
+    if (DstW > 0) and (DstH > 0) and (SrcW > 0) and (SrcH > 0) then
+      StretchBlt(DC, ARect.Left, ARect.Top, DstW, DstH, Bmp.Canvas.Handle, SrcR.Left, SrcR.Top, SrcW, SrcH, SRCCOPY);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+procedure TfrmMain.WMEraseBkgnd(var Message: TWMEraseBkgnd);
+var
+  ClipR: TRect;
+begin
+  if (imgBackground.Picture.Graphic = nil) or imgBackground.Picture.Graphic.Empty then
+  begin
+    inherited;
+    Exit;
+  end;
+  GetClipBox(Message.DC, ClipR);
+  DrawFormBackground(Message.DC, ClipR);
+  Message.Result := 1;
 end;
 
 end.
