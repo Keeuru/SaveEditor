@@ -15,11 +15,6 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object Splitter1: TSplitter
-    Left = 280
-    Top = 0
-    Height = 761
-  end
   object StatusBar: TStatusBar
     Left = 0
     Top = 761
@@ -28,113 +23,30 @@ object frmMain: TfrmMain
     Panels = <>
     SimplePanel = True
   end
-  object gpFolderPath: TGridPanel
-    Left = 0
+  object pnlSaveEditor: TPanel
+    Left = 300
     Top = 0
-    Width = 280
-    Height = 761
-    Align = alLeft
-    BevelOuter = bvNone
-    ColumnCollection = <
-      item
-        Value = 100.000000000000000000
-      end
-      item
-        SizeStyle = ssAbsolute
-        Value = 30.000000000000000000
-      end>
-    ControlCollection = <
-      item
-        Column = 0
-        Control = edtFolderPath
-        Row = 0
-      end
-      item
-        Column = 1
-        Control = spbFolderPath
-        Row = 0
-      end
-      item
-        Column = 0
-        ColumnSpan = 2
-        Control = lbFilesList
-        Row = 1
-      end>
-    RowCollection = <
-      item
-        SizeStyle = ssAbsolute
-        Value = 28.000000000000000000
-      end
-      item
-        Value = 100.000000000000000000
-      end>
-    TabOrder = 0
-    ExplicitTop = 225
-    ExplicitHeight = 536
-    object edtFolderPath: TEdit
-      Left = 0
-      Top = 0
-      Width = 250
-      Height = 28
-      Align = alClient
-      TabOrder = 0
-      OnEnter = edtFolderPathEnter
-      OnKeyDown = edtFolderPathKeyDown
-      ExplicitHeight = 23
-    end
-    object spbFolderPath: TSpeedButton
-      Left = 250
-      Top = 0
-      Width = 30
-      Height = 28
-      Align = alClient
-      Caption = '...'
-      Flat = True
-      OnClick = spbFolderPathClick
-      ExplicitLeft = 253
-      ExplicitTop = 4
-      ExplicitWidth = 23
-      ExplicitHeight = 22
-    end
-    object lbFilesList: TListBox
-      Left = 0
-      Top = 28
-      Width = 280
-      Height = 733
-      Align = alClient
-      ItemHeight = 15
-      TabOrder = 1
-      OnDblClick = lbFilesListDblClick
-      ExplicitTop = 30
-      ExplicitHeight = 506
-    end
-  end
-  object Panel1: TPanel
-    Left = 283
-    Top = 0
-    Width = 967
+    Width = 950
     Height = 761
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 2
-    ExplicitLeft = 352
-    ExplicitTop = 128
-    ExplicitWidth = 857
-    ExplicitHeight = 425
-    object Splitter2: TSplitter
+    TabOrder = 1
+    object splBodyJSON: TSplitter
       Left = 0
       Top = 225
-      Width = 967
+      Width = 950
       Height = 3
       Cursor = crVSplit
       Align = alTop
+      MinSize = 100
       ExplicitWidth = 200
     end
-    object Splitter3: TSplitter
+    object splEditJSON: TSplitter
       Left = 300
       Top = 228
       Height = 533
+      MinSize = 100
       ExplicitLeft = 368
       ExplicitTop = 320
       ExplicitHeight = 100
@@ -142,7 +54,7 @@ object frmMain: TfrmMain
     object memoJson: TMemo
       Left = 0
       Top = 0
-      Width = 967
+      Width = 950
       Height = 225
       Align = alTop
       Font.Charset = DEFAULT_CHARSET
@@ -156,8 +68,6 @@ object frmMain: TfrmMain
       WantTabs = True
       WordWrap = False
       OnChange = memoJsonChange
-      ExplicitTop = -48
-      ExplicitWidth = 925
     end
     object PanelTree: TPanel
       Left = 0
@@ -167,9 +77,6 @@ object frmMain: TfrmMain
       Align = alLeft
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitLeft = 280
-      ExplicitTop = 0
-      ExplicitHeight = 761
       object PanelTreeTop: TPanel
         Left = 0
         Top = 0
@@ -240,25 +147,20 @@ object frmMain: TfrmMain
         Indent = 19
         TabOrder = 1
         OnChange = TreeJsonChange
-        ExplicitHeight = 679
       end
     end
     object PanelEdit: TPanel
       Left = 303
       Top = 228
-      Width = 664
+      Width = 647
       Height = 533
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitLeft = 285
-      ExplicitTop = 0
-      ExplicitWidth = 965
-      ExplicitHeight = 761
       object PanelEditTop: TPanel
         Left = 0
         Top = 0
-        Width = 664
+        Width = 647
         Height = 82
         Align = alTop
         BevelOuter = bvNone
@@ -283,7 +185,7 @@ object frmMain: TfrmMain
       object memoValue: TMemo
         Left = 0
         Top = 82
-        Width = 664
+        Width = 647
         Height = 451
         Align = alClient
         ScrollBars = ssBoth
@@ -292,47 +194,279 @@ object frmMain: TfrmMain
         OnChange = memoValueChange
         OnExit = memoValueExit
         OnKeyDown = memoValueKeyDown
-        ExplicitTop = 64
-        ExplicitWidth = 965
-        ExplicitHeight = 697
+      end
+    end
+  end
+  object svMainLeft: TSplitView
+    Left = 0
+    Top = 0
+    Width = 300
+    Height = 761
+    CloseStyle = svcCompact
+    CompactWidth = 40
+    OpenedWidth = 300
+    ParentBackground = True
+    ParentColor = True
+    ParentDoubleBuffered = True
+    Placement = svpLeft
+    TabOrder = 2
+    object gpMainButtons: TGridPanel
+      Left = 0
+      Top = 0
+      Width = 40
+      Height = 761
+      Align = alLeft
+      BevelOuter = bvNone
+      ColumnCollection = <
+        item
+          Value = 100.000000000000000000
+        end>
+      ControlCollection = <
+        item
+          Column = 0
+          Control = spbOpenFolder
+          Row = 2
+        end
+        item
+          Column = 0
+          Control = spbSaveFile
+          Row = 3
+        end
+        item
+          Column = 0
+          Control = spbSaveFileAs
+          Row = 4
+        end
+        item
+          Column = 0
+          Control = spbExportJson
+          Row = 5
+        end
+        item
+          Column = 0
+          Control = spbImportJson
+          Row = 6
+        end
+        item
+          Column = 0
+          Control = spbOpenFile
+          Row = 1
+        end
+        item
+          Column = 0
+          Control = spbExitApp
+          Row = 8
+        end>
+      RowCollection = <
+        item
+          Value = 50.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 40.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 40.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 40.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 40.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 40.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 40.000000000000000000
+        end
+        item
+          Value = 50.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 40.000000000000000000
+        end>
+      TabOrder = 0
+      object spbOpenFolder: TSpeedButton
+        Left = 0
+        Top = 280
+        Width = 40
+        Height = 40
+        Align = alClient
+        Flat = True
+        OnClick = OpenFolderClick
+        ExplicitTop = 8
+        ExplicitWidth = 50
+        ExplicitHeight = 280
+      end
+      object spbSaveFile: TSpeedButton
+        Left = 0
+        Top = 320
+        Width = 40
+        Height = 40
+        Align = alClient
+        Flat = True
+        OnClick = SaveFileClick
+        ExplicitLeft = 13
+        ExplicitTop = 8
+        ExplicitWidth = 23
+        ExplicitHeight = 22
+      end
+      object spbSaveFileAs: TSpeedButton
+        Left = 0
+        Top = 360
+        Width = 40
+        Height = 40
+        Align = alClient
+        Flat = True
+        OnClick = SaveFileAsClick
+        ExplicitLeft = 13
+        ExplicitTop = 8
+        ExplicitWidth = 23
+        ExplicitHeight = 22
+      end
+      object spbExportJson: TSpeedButton
+        Left = 0
+        Top = 400
+        Width = 40
+        Height = 40
+        Align = alClient
+        Flat = True
+        OnClick = ExportJsonClick
+        ExplicitLeft = 13
+        ExplicitTop = 8
+        ExplicitWidth = 23
+        ExplicitHeight = 22
+      end
+      object spbImportJson: TSpeedButton
+        Left = 0
+        Top = 440
+        Width = 40
+        Height = 40
+        Align = alClient
+        Flat = True
+        OnClick = ImportJsonClick
+        ExplicitLeft = 13
+        ExplicitTop = 8
+        ExplicitWidth = 23
+        ExplicitHeight = 22
+      end
+      object spbOpenFile: TSpeedButton
+        Left = 0
+        Top = 240
+        Width = 40
+        Height = 40
+        Align = alClient
+        Flat = True
+        OnClick = OpenFileClick
+        ExplicitLeft = -6
+        ExplicitTop = 234
+      end
+      object spbExitApp: TSpeedButton
+        Left = 0
+        Top = 721
+        Width = 40
+        Height = 40
+        Align = alClient
+        Flat = True
+        OnClick = ExitClick
+        ExplicitLeft = 8
+        ExplicitTop = 8
+        ExplicitWidth = 23
+        ExplicitHeight = 22
+      end
+    end
+    object gpFolderPath: TGridPanel
+      Left = 40
+      Top = 0
+      Width = 260
+      Height = 761
+      Align = alClient
+      BevelOuter = bvNone
+      ColumnCollection = <
+        item
+          Value = 100.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 30.000000000000000000
+        end>
+      ControlCollection = <
+        item
+          Column = 0
+          Control = edtFolderPath
+          Row = 0
+        end
+        item
+          Column = 1
+          Control = spbFolderSelect
+          Row = 0
+        end
+        item
+          Column = 0
+          ColumnSpan = 2
+          Control = lbFilesList
+          Row = 1
+        end>
+      RowCollection = <
+        item
+          SizeStyle = ssAbsolute
+          Value = 28.000000000000000000
+        end
+        item
+          Value = 100.000000000000000000
+        end>
+      TabOrder = 1
+      ExplicitLeft = 50
+      ExplicitWidth = 250
+      object edtFolderPath: TEdit
+        Left = 0
+        Top = 0
+        Width = 230
+        Height = 28
+        Align = alClient
+        TabOrder = 0
+        OnEnter = edtFolderPathEnter
+        OnKeyDown = edtFolderPathKeyDown
+        ExplicitWidth = 220
+        ExplicitHeight = 23
+      end
+      object spbFolderSelect: TSpeedButton
+        Left = 230
+        Top = 0
+        Width = 30
+        Height = 28
+        Align = alClient
+        Caption = '...'
+        Flat = True
+        OnClick = spbFolderSelectClick
+        ExplicitLeft = 253
+        ExplicitTop = 4
+        ExplicitWidth = 23
+        ExplicitHeight = 22
+      end
+      object lbFilesList: TListBox
+        Left = 0
+        Top = 28
+        Width = 260
+        Height = 733
+        Align = alClient
+        ItemHeight = 15
+        TabOrder = 1
+        OnDblClick = lbFilesListDblClick
+        ExplicitWidth = 250
       end
     end
   end
   object MainMenu: TMainMenu
-    Left = 64
-    Top = 352
-    object mnuFile: TMenuItem
-      Caption = 'File'
-      object mnuOpen: TMenuItem
-        Caption = 'Open...'
-        ShortCut = 16463
-        OnClick = mnuOpenClick
-      end
-      object mnuSave: TMenuItem
-        Caption = 'Save'
-        ShortCut = 16467
-        OnClick = mnuSaveClick
-      end
-      object mnuSaveAs: TMenuItem
-        Caption = 'Save As...'
-        OnClick = mnuSaveAsClick
-      end
-      object mnuExportJson: TMenuItem
-        Caption = 'Export to JSON...'
-        OnClick = mnuExportJsonClick
-      end
-      object mnuImportJson: TMenuItem
-        Caption = 'Import from JSON...'
-        OnClick = mnuImportJsonClick
-      end
-      object N1: TMenuItem
-        Caption = '-'
-      end
-      object mnuExit: TMenuItem
-        Caption = 'Exit'
-        OnClick = mnuExitClick
-      end
-    end
+    Left = 112
+    Top = 592
     object mnuEdit: TMenuItem
       Caption = 'Edit'
       object mnuFind: TMenuItem
@@ -364,25 +498,25 @@ object frmMain: TfrmMain
     end
   end
   object OpenDialog: TOpenDialog
-    Left = 64
-    Top = 408
+    Left = 112
+    Top = 648
   end
   object SaveDialog: TSaveDialog
-    Left = 160
-    Top = 408
+    Left = 208
+    Top = 648
   end
   object JsonSaveDialog: TSaveDialog
-    Left = 160
-    Top = 464
+    Left = 208
+    Top = 704
   end
   object JsonOpenDialog: TOpenDialog
-    Left = 64
-    Top = 464
+    Left = 112
+    Top = 704
   end
   object ApplicationEvents: TApplicationEvents
     OnActivate = AppActivate
     OnIdle = AppIdle
-    Left = 160
-    Top = 352
+    Left = 208
+    Top = 592
   end
 end

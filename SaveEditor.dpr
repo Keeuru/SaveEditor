@@ -7,7 +7,9 @@ uses
   SaveCodec in 'src\SaveCodec.pas',
   SaveSlots in 'src\SaveSlots.pas',
   XSuperJSON in 'src\XSuperJSON.pas',
-  XSuperObject in 'src\XSuperObject.pas';
+  XSuperObject in 'src\XSuperObject.pas',
+  Vcl.Themes,
+  Vcl.Styles;
 
 {$R *.res}
 

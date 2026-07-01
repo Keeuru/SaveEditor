@@ -11,20 +11,11 @@ uses
 type
   TfrmMain = class(TForm)
     MainMenu: TMainMenu;
-    mnuFile: TMenuItem;
-    mnuOpen: TMenuItem;
-    mnuSave: TMenuItem;
-    mnuSaveAs: TMenuItem;
-    mnuExportJson: TMenuItem;
-    mnuImportJson: TMenuItem;
-    N1: TMenuItem;
-    mnuExit: TMenuItem;
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
     JsonSaveDialog: TSaveDialog;
     JsonOpenDialog: TOpenDialog;
     StatusBar: TStatusBar;
-    Splitter1: TSplitter;
     PanelTree: TPanel;
     PanelTreeTop: TPanel;
     lblView: TLabel;
@@ -48,22 +39,31 @@ type
     mnuReloadTree: TMenuItem;
     gpFolderPath: TGridPanel;
     edtFolderPath: TEdit;
-    spbFolderPath: TSpeedButton;
+    spbFolderSelect: TSpeedButton;
     lbFilesList: TListBox;
     ApplicationEvents: TApplicationEvents;
-    Panel1: TPanel;
-    Splitter2: TSplitter;
-    Splitter3: TSplitter;
+    pnlSaveEditor: TPanel;
+    splBodyJSON: TSplitter;
+    splEditJSON: TSplitter;
+    svMainLeft: TSplitView;
+    gpMainButtons: TGridPanel;
+    spbOpenFolder: TSpeedButton;
+    spbSaveFile: TSpeedButton;
+    spbSaveFileAs: TSpeedButton;
+    spbExportJson: TSpeedButton;
+    spbImportJson: TSpeedButton;
+    spbOpenFile: TSpeedButton;
+    spbExitApp: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure AppActivate(Sender: TObject);
     procedure AppIdle(Sender: TObject; var Done: Boolean);
-    procedure mnuOpenClick(Sender: TObject);
-    procedure mnuSaveClick(Sender: TObject);
-    procedure mnuSaveAsClick(Sender: TObject);
-    procedure mnuExportJsonClick(Sender: TObject);
-    procedure mnuImportJsonClick(Sender: TObject);
-    procedure mnuExitClick(Sender: TObject);
+    procedure OpenFileClick(Sender: TObject);
+    procedure SaveFileClick(Sender: TObject);
+    procedure SaveFileAsClick(Sender: TObject);
+    procedure ExportJsonClick(Sender: TObject);
+    procedure ImportJsonClick(Sender: TObject);
+    procedure ExitClick(Sender: TObject);
     procedure TreeJsonChange(Sender: TObject; Node: TTreeNode);
     procedure btnApplyClick(Sender: TObject);
     procedure memoValueChange(Sender: TObject);
@@ -77,10 +77,11 @@ type
     procedure btnFindPrevClick(Sender: TObject);
     procedure edtSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure mnuFindClick(Sender: TObject);
-    procedure spbFolderPathClick(Sender: TObject);
+    procedure spbFolderSelectClick(Sender: TObject);
     procedure edtFolderPathKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure lbFilesListDblClick(Sender: TObject);
     procedure edtFolderPathEnter(Sender: TObject);
+    procedure OpenFolderClick(Sender: TObject);
   private
     FJsonRoot: TJSONValue;
     FNodeKeys: TDictionary<TTreeNode, string>;
@@ -147,6 +148,7 @@ begin
   JsonSaveDialog.DefaultExt := 'json';
   JsonOpenDialog.Filter := JsonSaveDialog.Filter;
   ClearDocument;
+  svMainLeft.Opened := False;
   if ParamCount >= 1 then
     LoadDocument(ParamStr(1));
 end;
@@ -796,7 +798,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.mnuOpenClick(Sender: TObject);
+procedure TfrmMain.OpenFileClick(Sender: TObject);
 begin
   if not ConfirmSaveIfModified then
     Exit;
@@ -805,17 +807,17 @@ begin
     LoadDocument(OpenDialog.FileName);
 end;
 
-procedure TfrmMain.mnuSaveClick(Sender: TObject);
+procedure TfrmMain.SaveFileClick(Sender: TObject);
 begin
   if FJsonRoot = nil then
     Exit;
   if FFileName = '' then
-    mnuSaveAsClick(Sender)
+    SaveFileAsClick(Sender)
   else
     SaveDocument(FFileName);
 end;
 
-procedure TfrmMain.mnuSaveAsClick(Sender: TObject);
+procedure TfrmMain.SaveFileAsClick(Sender: TObject);
 begin
   if FJsonRoot = nil then
     Exit;
@@ -824,7 +826,7 @@ begin
     SaveDocument(SaveDialog.FileName);
 end;
 
-procedure TfrmMain.mnuExportJsonClick(Sender: TObject);
+procedure TfrmMain.ExportJsonClick(Sender: TObject);
 var
   View: TJSONValue;
   BaseName, OutName: string;
@@ -856,7 +858,7 @@ begin
   MessageDlg('Экспортировано: ' + JsonSaveDialog.FileName, mtInformation, [mbOK], 0);
 end;
 
-procedure TfrmMain.mnuImportJsonClick(Sender: TObject);
+procedure TfrmMain.ImportJsonClick(Sender: TObject);
 var
   Text: string;
 begin
@@ -876,7 +878,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.mnuExitClick(Sender: TObject);
+procedure TfrmMain.ExitClick(Sender: TObject);
 begin
   if ConfirmSaveIfModified then
     Close;
@@ -1091,6 +1093,11 @@ begin
   end;
 end;
 
+procedure TfrmMain.OpenFolderClick(Sender: TObject);
+begin
+  svMainLeft.Opened := True;
+end;
+
 procedure TfrmMain.StartFolderWatch;
 var
   Folder: string;
@@ -1166,7 +1173,7 @@ begin
   StartFolderWatch;
 end;
 
-procedure TfrmMain.spbFolderPathClick(Sender: TObject);
+procedure TfrmMain.spbFolderSelectClick(Sender: TObject);
 var
   Dir: string;
 begin
