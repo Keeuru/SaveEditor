@@ -34,33 +34,23 @@ object frmMain: TfrmMain
     TabOrder = 1
     object splBodyJSON: TSplitter
       Left = 0
-      Top = 225
+      Top = 373
       Width = 950
       Height = 3
       Cursor = crVSplit
-      Align = alTop
+      Align = alBottom
       Color = clHighlight
       MinSize = 100
       ParentColor = False
+      ExplicitTop = 225
       ExplicitWidth = 200
-    end
-    object splEditJSON: TSplitter
-      Left = 300
-      Top = 228
-      Height = 533
-      Color = clHighlight
-      MinSize = 100
-      ParentColor = False
-      ExplicitLeft = 368
-      ExplicitTop = 320
-      ExplicitHeight = 100
     end
     object memoJson: TMemo
       Left = 0
       Top = 0
       Width = 950
-      Height = 225
-      Align = alTop
+      Height = 373
+      Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
@@ -72,132 +62,165 @@ object frmMain: TfrmMain
       WantTabs = True
       WordWrap = False
       OnChange = memoJsonChange
+      ExplicitHeight = 225
     end
-    object PanelTree: TPanel
+    object pnlEditTree: TPanel
       Left = 0
-      Top = 228
-      Width = 300
-      Height = 533
-      Align = alLeft
+      Top = 376
+      Width = 950
+      Height = 385
+      Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
-      object PanelTreeTop: TPanel
+      object splEditJSON: TSplitter
+        Left = 300
+        Top = 0
+        Height = 385
+        Color = clHighlight
+        MinSize = 100
+        ParentColor = False
+        ExplicitLeft = 520
+        ExplicitTop = 16
+        ExplicitHeight = 353
+      end
+      object PanelTree: TPanel
         Left = 0
         Top = 0
         Width = 300
-        Height = 82
-        Align = alTop
+        Height = 385
+        Align = alLeft
         BevelOuter = bvNone
         TabOrder = 0
-        object lblView: TLabel
-          Left = 8
-          Top = 8
-          Width = 25
-          Height = 15
-          Caption = 'View'
-        end
-        object lblSearch: TLabel
-          Left = 8
-          Top = 56
-          Width = 35
-          Height = 15
-          Caption = 'Search'
-        end
-        object cboView: TComboBox
-          Left = 8
-          Top = 27
-          Width = 284
-          Height = 23
-          Style = csDropDownList
+        ExplicitTop = 228
+        ExplicitHeight = 533
+        object PanelTreeTop: TPanel
+          Left = 0
+          Top = 0
+          Width = 300
+          Height = 82
+          Align = alTop
+          BevelOuter = bvNone
           TabOrder = 0
-          OnChange = cboViewChange
+          object lblView: TLabel
+            Left = 8
+            Top = 8
+            Width = 25
+            Height = 15
+            Caption = 'View'
+          end
+          object lblSearch: TLabel
+            Left = 8
+            Top = 56
+            Width = 35
+            Height = 15
+            Caption = 'Search'
+          end
+          object cboView: TComboBox
+            Left = 8
+            Top = 27
+            Width = 284
+            Height = 23
+            Style = csDropDownList
+            TabOrder = 0
+            OnChange = cboViewChange
+          end
+          object edtSearch: TEdit
+            Left = 50
+            Top = 53
+            Width = 163
+            Height = 23
+            TabOrder = 1
+            OnKeyDown = edtSearchKeyDown
+          end
+          object btnFindNext: TButton
+            Left = 219
+            Top = 52
+            Width = 34
+            Height = 25
+            Hint = 'Next (F3)'
+            Caption = #9660
+            TabOrder = 2
+            OnClick = btnFindNextClick
+          end
+          object btnFindPrev: TButton
+            Left = 258
+            Top = 52
+            Width = 34
+            Height = 25
+            Hint = 'Previous (Shift+F3)'
+            Caption = #9650
+            TabOrder = 3
+            OnClick = btnFindPrevClick
+          end
         end
-        object edtSearch: TEdit
-          Left = 50
-          Top = 53
-          Width = 163
-          Height = 23
+        object TreeJson: TTreeView
+          Left = 0
+          Top = 82
+          Width = 300
+          Height = 303
+          Align = alClient
+          HideSelection = False
+          Indent = 19
           TabOrder = 1
-          OnKeyDown = edtSearchKeyDown
-        end
-        object btnFindNext: TButton
-          Left = 219
-          Top = 52
-          Width = 34
-          Height = 25
-          Hint = 'Next (F3)'
-          Caption = #9660
-          TabOrder = 2
-          OnClick = btnFindNextClick
-        end
-        object btnFindPrev: TButton
-          Left = 258
-          Top = 52
-          Width = 34
-          Height = 25
-          Hint = 'Previous (Shift+F3)'
-          Caption = #9650
-          TabOrder = 3
-          OnClick = btnFindPrevClick
+          OnChange = TreeJsonChange
+          ExplicitHeight = 451
         end
       end
-      object TreeJson: TTreeView
-        Left = 0
-        Top = 82
-        Width = 300
-        Height = 451
-        Align = alClient
-        HideSelection = False
-        Indent = 19
-        TabOrder = 1
-        OnChange = TreeJsonChange
-      end
-    end
-    object PanelEdit: TPanel
-      Left = 303
-      Top = 228
-      Width = 647
-      Height = 533
-      Align = alClient
-      BevelOuter = bvNone
-      TabOrder = 2
-      object PanelEditTop: TPanel
-        Left = 0
+      object PanelEdit: TPanel
+        Left = 303
         Top = 0
         Width = 647
-        Height = 82
-        Align = alTop
-        BevelOuter = bvNone
-        TabOrder = 0
-        object lblPath: TLabel
-          Left = 8
-          Top = 8
-          Width = 24
-          Height = 15
-          Caption = 'Path'
-        end
-        object btnApply: TButton
-          Left = 6
-          Top = 51
-          Width = 120
-          Height = 25
-          Caption = 'Apply'
-          TabOrder = 0
-          OnClick = btnApplyClick
-        end
-      end
-      object memoValue: TMemo
-        Left = 0
-        Top = 82
-        Width = 647
-        Height = 451
+        Height = 385
         Align = alClient
-        ScrollBars = ssBoth
+        BevelOuter = bvNone
         TabOrder = 1
-        WordWrap = False
-        OnChange = memoValueChange
-        OnExit = memoValueExit
-        OnKeyDown = memoValueKeyDown
+        ExplicitLeft = -60
+        ExplicitTop = -180
+        ExplicitWidth = 637
+        ExplicitHeight = 533
+        object PanelEditTop: TPanel
+          Left = 0
+          Top = 0
+          Width = 647
+          Height = 82
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 0
+          ExplicitLeft = 3
+          ExplicitTop = 8
+          ExplicitWidth = 394
+          object lblPath: TLabel
+            Left = 8
+            Top = 8
+            Width = 24
+            Height = 15
+            Caption = 'Path'
+          end
+          object btnApply: TButton
+            Left = 6
+            Top = 51
+            Width = 120
+            Height = 25
+            Caption = 'Apply'
+            TabOrder = 0
+            OnClick = btnApplyClick
+          end
+        end
+        object memoValue: TMemo
+          Left = 0
+          Top = 82
+          Width = 647
+          Height = 303
+          Align = alClient
+          ScrollBars = ssBoth
+          TabOrder = 1
+          WordWrap = False
+          OnChange = memoValueChange
+          OnExit = memoValueExit
+          OnKeyDown = memoValueKeyDown
+          ExplicitWidth = 637
+          ExplicitHeight = 451
+        end
       end
     end
   end
@@ -414,6 +437,10 @@ object frmMain: TfrmMain
         item
           SizeStyle = ssAbsolute
           Value = 30.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 30.000000000000000000
         end>
       ControlCollection = <
         item
@@ -428,9 +455,14 @@ object frmMain: TfrmMain
         end
         item
           Column = 0
-          ColumnSpan = 2
+          ColumnSpan = 3
           Control = lbFilesList
           Row = 1
+        end
+        item
+          Column = 2
+          Control = spbFolderSelectPin
+          Row = 0
         end>
       RowCollection = <
         item
@@ -444,7 +476,7 @@ object frmMain: TfrmMain
       object edtFolderPath: TEdit
         Left = 0
         Top = 0
-        Width = 230
+        Width = 200
         Height = 28
         Align = alClient
         TabOrder = 0
@@ -453,7 +485,7 @@ object frmMain: TfrmMain
         ExplicitHeight = 23
       end
       object spbFolderSelect: TSpeedButton
-        Left = 230
+        Left = 200
         Top = 0
         Width = 30
         Height = 28
@@ -476,6 +508,24 @@ object frmMain: TfrmMain
         ItemHeight = 15
         TabOrder = 1
         OnDblClick = lbFilesListDblClick
+      end
+      object spbFolderSelectPin: TSpeedButton
+        Left = 230
+        Top = 0
+        Width = 30
+        Height = 28
+        Align = alClient
+        AllowAllUp = True
+        GroupIndex = 1
+        Down = True
+        Flat = True
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = spbFolderSelectPinClick
+        ExplicitLeft = 253
+        ExplicitTop = 4
+        ExplicitWidth = 23
+        ExplicitHeight = 22
       end
     end
   end

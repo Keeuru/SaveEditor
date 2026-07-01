@@ -16,6 +16,7 @@ const
   fa_download = WideChar($F019);
   fa_upload = WideChar($F093);
   fa_sign_out = WideChar($F08B);
+  fa_thumb_tack = WideChar($F08D);
 
 function RegisterFontAwesome: Boolean;
 

@@ -55,6 +55,8 @@ type
     spbImportJson: TSpeedButton;
     spbOpenFile: TSpeedButton;
     spbExitApp: TSpeedButton;
+    spbFolderSelectPin: TSpeedButton;
+    pnlEditTree: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure AppActivate(Sender: TObject);
@@ -83,6 +85,7 @@ type
     procedure lbFilesListDblClick(Sender: TObject);
     procedure edtFolderPathEnter(Sender: TObject);
     procedure OpenFolderClick(Sender: TObject);
+    procedure spbFolderSelectPinClick(Sender: TObject);
   private
     FJsonRoot: ISuperObject;
     FNodeKeys: TDictionary<TTreeNode, string>;
@@ -123,8 +126,10 @@ type
     procedure StartFolderWatch;
     procedure StopFolderWatch;
     procedure CheckFolderWatch;
+    procedure CheckSplitViewAutoHide;
     procedure OnApplicationActivated;
     procedure SetupSpeedButtons;
+    procedure UpdateFolderPinButton;
   protected
     procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
   public
@@ -1094,6 +1099,7 @@ end;
 procedure TfrmMain.AppIdle(Sender: TObject; var Done: Boolean);
 begin
   CheckFolderWatch;
+  CheckSplitViewAutoHide;
 end;
 
 procedure TfrmMain.StopFolderWatch;
@@ -1133,6 +1139,24 @@ begin
     FindNextChangeNotification(FDirChangeHandle);
     RefreshSaveFilesList(False);
   end;
+end;
+
+procedure TfrmMain.CheckSplitViewAutoHide;
+var
+  MousePos, TopLeft, BottomRight: TPoint;
+  PanelRect: TRect;
+begin
+  if not svMainLeft.Opened then
+    Exit;
+  if spbFolderSelectPin.Down then
+    Exit;
+
+  MousePos := Mouse.CursorPos;
+  TopLeft := svMainLeft.ClientToScreen(Point(0, 0));
+  BottomRight := svMainLeft.ClientToScreen(Point(svMainLeft.Width, svMainLeft.Height));
+  PanelRect := Rect(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y);
+  if not PtInRect(PanelRect, MousePos) then
+    svMainLeft.Opened := False;
 end;
 
 procedure TfrmMain.RefreshSaveFilesList(AShowErrors: Boolean);
@@ -1236,6 +1260,20 @@ begin
   SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18, clMaroon);
   SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clGray);
   SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14, TColor($0000A0D0));
+  UpdateFolderPinButton;
+end;
+
+procedure TfrmMain.UpdateFolderPinButton;
+begin
+  if spbFolderSelectPin.Down then
+    SetupSpeedButtonIcon(spbFolderSelectPin, fa_thumb_tack, 'Открепить панель', 14, clNavy)
+  else
+    SetupSpeedButtonIcon(spbFolderSelectPin, fa_thumb_tack, 'Закрепить панель', 14, clGray);
+end;
+
+procedure TfrmMain.spbFolderSelectPinClick(Sender: TObject);
+begin
+  UpdateFolderPinButton;
 end;
 
 end.
