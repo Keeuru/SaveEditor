@@ -7,7 +7,7 @@ uses
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Menus, Vcl.AppEvnts, XSuperObject, XSuperJSON, SaveCodec, SaveSlots,
-  Vcl.Buttons, Vcl.WinXCtrls, FontAwesome;
+  Vcl.Buttons, FontAwesome;
 
 type
   TfrmMain = class(TForm)
@@ -43,10 +43,7 @@ type
     spbFolderSelect: TSpeedButton;
     lbFilesList: TListBox;
     ApplicationEvents: TApplicationEvents;
-    pnlSaveEditor: TPanel;
-    splBodyJSON: TSplitter;
     splEditJSON: TSplitter;
-    svMainLeft: TSplitView;
     gpMainButtons: TGridPanel;
     spbOpenFolder: TSpeedButton;
     spbSaveFile: TSpeedButton;
@@ -55,8 +52,7 @@ type
     spbImportJson: TSpeedButton;
     spbOpenFile: TSpeedButton;
     spbExitApp: TSpeedButton;
-    spbFolderSelectPin: TSpeedButton;
-    pnlEditTree: TPanel;
+    Splitter1: TSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure AppActivate(Sender: TObject);
@@ -85,7 +81,6 @@ type
     procedure lbFilesListDblClick(Sender: TObject);
     procedure edtFolderPathEnter(Sender: TObject);
     procedure OpenFolderClick(Sender: TObject);
-    procedure spbFolderSelectPinClick(Sender: TObject);
   private
     FJsonRoot: ISuperObject;
     FNodeKeys: TDictionary<TTreeNode, string>;
@@ -126,10 +121,9 @@ type
     procedure StartFolderWatch;
     procedure StopFolderWatch;
     procedure CheckFolderWatch;
-    procedure CheckSplitViewAutoHide;
     procedure OnApplicationActivated;
     procedure SetupSpeedButtons;
-    procedure UpdateFolderPinButton;
+    procedure UpdateFolderPanelVisibility;
   protected
     procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
   public
@@ -162,8 +156,8 @@ begin
   JsonSaveDialog.DefaultExt := 'json';
   JsonOpenDialog.Filter := JsonSaveDialog.Filter;
   ClearDocument;
-  svMainLeft.Opened := False;
   SetupSpeedButtons;
+  UpdateFolderPanelVisibility;
   if ParamCount >= 1 then
     LoadDocument(ParamStr(1));
 end;
@@ -1099,7 +1093,6 @@ end;
 procedure TfrmMain.AppIdle(Sender: TObject; var Done: Boolean);
 begin
   CheckFolderWatch;
-  CheckSplitViewAutoHide;
 end;
 
 procedure TfrmMain.StopFolderWatch;
@@ -1113,7 +1106,7 @@ end;
 
 procedure TfrmMain.OpenFolderClick(Sender: TObject);
 begin
-  svMainLeft.Opened := True;
+  UpdateFolderPanelVisibility;
 end;
 
 procedure TfrmMain.StartFolderWatch;
@@ -1139,24 +1132,6 @@ begin
     FindNextChangeNotification(FDirChangeHandle);
     RefreshSaveFilesList(False);
   end;
-end;
-
-procedure TfrmMain.CheckSplitViewAutoHide;
-var
-  MousePos, TopLeft, BottomRight: TPoint;
-  PanelRect: TRect;
-begin
-  if not svMainLeft.Opened then
-    Exit;
-  if spbFolderSelectPin.Down then
-    Exit;
-
-  MousePos := Mouse.CursorPos;
-  TopLeft := svMainLeft.ClientToScreen(Point(0, 0));
-  BottomRight := svMainLeft.ClientToScreen(Point(svMainLeft.Width, svMainLeft.Height));
-  PanelRect := Rect(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y);
-  if not PtInRect(PanelRect, MousePos) then
-    svMainLeft.Opened := False;
 end;
 
 procedure TfrmMain.RefreshSaveFilesList(AShowErrors: Boolean);
@@ -1253,27 +1228,22 @@ begin
     Exit;
 
   SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18, clNavy);
-  SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Показать панель папки', 18, clTeal);
   SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18, clGreen);
   SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18, TColor($0080B000));
   SetupSpeedButtonIcon(spbExportJson, fa_download, 'Экспорт в JSON...', 18, clPurple);
   SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18, clMaroon);
   SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clGray);
   SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14, TColor($0000A0D0));
-  UpdateFolderPinButton;
+  UpdateFolderPanelVisibility;
 end;
 
-procedure TfrmMain.UpdateFolderPinButton;
+procedure TfrmMain.UpdateFolderPanelVisibility;
 begin
-  if spbFolderSelectPin.Down then
-    SetupSpeedButtonIcon(spbFolderSelectPin, fa_thumb_tack, 'Открепить панель', 14, clNavy)
+  gpFolderPath.Visible := spbOpenFolder.Down;
+  if spbOpenFolder.Down then
+    SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Скрыть панель папки', 18, clTeal)
   else
-    SetupSpeedButtonIcon(spbFolderSelectPin, fa_thumb_tack, 'Закрепить панель', 14, clGray);
-end;
-
-procedure TfrmMain.spbFolderSelectPinClick(Sender: TObject);
-begin
-  UpdateFolderPinButton;
+    SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Показать панель папки', 18, clGray);
 end;
 
 end.

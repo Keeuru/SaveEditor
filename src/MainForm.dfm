@@ -15,6 +15,27 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
+  object splEditJSON: TSplitter
+    Left = 947
+    Top = 0
+    Height = 761
+    Align = alRight
+    Color = clBlack
+    MinSize = 100
+    ParentColor = False
+    ExplicitLeft = 340
+  end
+  object Splitter1: TSplitter
+    Left = 644
+    Top = 0
+    Height = 761
+    Align = alRight
+    Color = clBlack
+    MinSize = 100
+    ParentColor = False
+    ExplicitLeft = 476
+    ExplicitTop = -6
+  end
   object StatusBar: TStatusBar
     Left = 0
     Top = 761
@@ -23,511 +44,388 @@ object frmMain: TfrmMain
     Panels = <>
     SimplePanel = True
   end
-  object pnlSaveEditor: TPanel
-    Left = 300
-    Top = 0
-    Width = 950
-    Height = 761
-    Align = alClient
-    BevelOuter = bvNone
-    ParentColor = True
-    TabOrder = 1
-    object splBodyJSON: TSplitter
-      Left = 0
-      Top = 373
-      Width = 950
-      Height = 3
-      Cursor = crVSplit
-      Align = alBottom
-      Color = clHighlight
-      MinSize = 100
-      ParentColor = False
-      ExplicitTop = 225
-      ExplicitWidth = 200
-    end
-    object memoJson: TMemo
-      Left = 0
-      Top = 0
-      Width = 950
-      Height = 373
-      Align = alClient
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Consolas'
-      Font.Style = []
-      ParentFont = False
-      ScrollBars = ssBoth
-      TabOrder = 0
-      WantTabs = True
-      WordWrap = False
-      OnChange = memoJsonChange
-      ExplicitHeight = 225
-    end
-    object pnlEditTree: TPanel
-      Left = 0
-      Top = 376
-      Width = 950
-      Height = 385
-      Align = alBottom
-      BevelOuter = bvNone
-      TabOrder = 1
-      object splEditJSON: TSplitter
-        Left = 300
-        Top = 0
-        Height = 385
-        Color = clHighlight
-        MinSize = 100
-        ParentColor = False
-        ExplicitLeft = 520
-        ExplicitTop = 16
-        ExplicitHeight = 353
-      end
-      object PanelTree: TPanel
-        Left = 0
-        Top = 0
-        Width = 300
-        Height = 385
-        Align = alLeft
-        BevelOuter = bvNone
-        TabOrder = 0
-        ExplicitTop = 228
-        ExplicitHeight = 533
-        object PanelTreeTop: TPanel
-          Left = 0
-          Top = 0
-          Width = 300
-          Height = 82
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 0
-          object lblView: TLabel
-            Left = 8
-            Top = 8
-            Width = 25
-            Height = 15
-            Caption = 'View'
-          end
-          object lblSearch: TLabel
-            Left = 8
-            Top = 56
-            Width = 35
-            Height = 15
-            Caption = 'Search'
-          end
-          object cboView: TComboBox
-            Left = 8
-            Top = 27
-            Width = 284
-            Height = 23
-            Style = csDropDownList
-            TabOrder = 0
-            OnChange = cboViewChange
-          end
-          object edtSearch: TEdit
-            Left = 50
-            Top = 53
-            Width = 163
-            Height = 23
-            TabOrder = 1
-            OnKeyDown = edtSearchKeyDown
-          end
-          object btnFindNext: TButton
-            Left = 219
-            Top = 52
-            Width = 34
-            Height = 25
-            Hint = 'Next (F3)'
-            Caption = #9660
-            TabOrder = 2
-            OnClick = btnFindNextClick
-          end
-          object btnFindPrev: TButton
-            Left = 258
-            Top = 52
-            Width = 34
-            Height = 25
-            Hint = 'Previous (Shift+F3)'
-            Caption = #9650
-            TabOrder = 3
-            OnClick = btnFindPrevClick
-          end
-        end
-        object TreeJson: TTreeView
-          Left = 0
-          Top = 82
-          Width = 300
-          Height = 303
-          Align = alClient
-          HideSelection = False
-          Indent = 19
-          TabOrder = 1
-          OnChange = TreeJsonChange
-          ExplicitHeight = 451
-        end
-      end
-      object PanelEdit: TPanel
-        Left = 303
-        Top = 0
-        Width = 647
-        Height = 385
-        Align = alClient
-        BevelOuter = bvNone
-        TabOrder = 1
-        ExplicitLeft = -60
-        ExplicitTop = -180
-        ExplicitWidth = 637
-        ExplicitHeight = 533
-        object PanelEditTop: TPanel
-          Left = 0
-          Top = 0
-          Width = 647
-          Height = 82
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 0
-          ExplicitLeft = 3
-          ExplicitTop = 8
-          ExplicitWidth = 394
-          object lblPath: TLabel
-            Left = 8
-            Top = 8
-            Width = 24
-            Height = 15
-            Caption = 'Path'
-          end
-          object btnApply: TButton
-            Left = 6
-            Top = 51
-            Width = 120
-            Height = 25
-            Caption = 'Apply'
-            TabOrder = 0
-            OnClick = btnApplyClick
-          end
-        end
-        object memoValue: TMemo
-          Left = 0
-          Top = 82
-          Width = 647
-          Height = 303
-          Align = alClient
-          ScrollBars = ssBoth
-          TabOrder = 1
-          WordWrap = False
-          OnChange = memoValueChange
-          OnExit = memoValueExit
-          OnKeyDown = memoValueKeyDown
-          ExplicitWidth = 637
-          ExplicitHeight = 451
-        end
-      end
-    end
-  end
-  object svMainLeft: TSplitView
+  object gpMainButtons: TGridPanel
     Left = 0
     Top = 0
-    Width = 300
+    Width = 40
     Height = 761
-    CloseStyle = svcCompact
-    CompactWidth = 40
-    OpenedWidth = 300
-    ParentBackground = True
-    ParentColor = True
-    ParentDoubleBuffered = True
-    Placement = svpLeft
-    TabOrder = 2
-    object gpMainButtons: TGridPanel
+    Align = alLeft
+    BevelOuter = bvNone
+    ColumnCollection = <
+      item
+        Value = 100.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = spbOpenFile
+        Row = 0
+      end
+      item
+        Column = 0
+        Control = spbOpenFolder
+        Row = 1
+      end
+      item
+        Column = 0
+        Control = spbSaveFile
+        Row = 2
+      end
+      item
+        Column = 0
+        Control = spbSaveFileAs
+        Row = 3
+      end
+      item
+        Column = 0
+        Control = spbExportJson
+        Row = 4
+      end
+      item
+        Column = 0
+        Control = spbImportJson
+        Row = 5
+      end
+      item
+        Column = 0
+        Control = spbExitApp
+        Row = 7
+      end>
+    RowCollection = <
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
+      item
+        Value = 100.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end>
+    TabOrder = 0
+    object spbOpenFile: TSpeedButton
       Left = 0
       Top = 0
       Width = 40
-      Height = 761
-      Align = alLeft
-      BevelOuter = bvNone
-      ColumnCollection = <
-        item
-          Value = 100.000000000000000000
-        end>
-      ControlCollection = <
-        item
-          Column = 0
-          Control = spbOpenFolder
-          Row = 2
-        end
-        item
-          Column = 0
-          Control = spbSaveFile
-          Row = 3
-        end
-        item
-          Column = 0
-          Control = spbSaveFileAs
-          Row = 4
-        end
-        item
-          Column = 0
-          Control = spbExportJson
-          Row = 5
-        end
-        item
-          Column = 0
-          Control = spbImportJson
-          Row = 6
-        end
-        item
-          Column = 0
-          Control = spbOpenFile
-          Row = 1
-        end
-        item
-          Column = 0
-          Control = spbExitApp
-          Row = 8
-        end>
-      RowCollection = <
-        item
-          Value = 50.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 40.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 40.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 40.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 40.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 40.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 40.000000000000000000
-        end
-        item
-          Value = 50.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 40.000000000000000000
-        end>
-      TabOrder = 0
-      object spbOpenFolder: TSpeedButton
-        Left = 0
-        Top = 280
-        Width = 40
-        Height = 40
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = OpenFolderClick
-        ExplicitTop = 8
-        ExplicitWidth = 50
-        ExplicitHeight = 280
-      end
-      object spbSaveFile: TSpeedButton
-        Left = 0
-        Top = 320
-        Width = 40
-        Height = 40
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = SaveFileClick
-        ExplicitLeft = 13
-        ExplicitTop = 8
-        ExplicitWidth = 23
-        ExplicitHeight = 22
-      end
-      object spbSaveFileAs: TSpeedButton
-        Left = 0
-        Top = 360
-        Width = 40
-        Height = 40
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = SaveFileAsClick
-        ExplicitLeft = 13
-        ExplicitTop = 8
-        ExplicitWidth = 23
-        ExplicitHeight = 22
-      end
-      object spbExportJson: TSpeedButton
-        Left = 0
-        Top = 400
-        Width = 40
-        Height = 40
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = ExportJsonClick
-        ExplicitLeft = 13
-        ExplicitTop = 8
-        ExplicitWidth = 23
-        ExplicitHeight = 22
-      end
-      object spbImportJson: TSpeedButton
-        Left = 0
-        Top = 440
-        Width = 40
-        Height = 40
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = ImportJsonClick
-        ExplicitLeft = 13
-        ExplicitTop = 8
-        ExplicitWidth = 23
-        ExplicitHeight = 22
-      end
-      object spbOpenFile: TSpeedButton
-        Left = 0
-        Top = 240
-        Width = 40
-        Height = 40
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = OpenFileClick
-        ExplicitLeft = -6
-        ExplicitTop = 234
-      end
-      object spbExitApp: TSpeedButton
-        Left = 0
-        Top = 721
-        Width = 40
-        Height = 40
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = ExitClick
-        ExplicitLeft = 8
-        ExplicitTop = 8
-        ExplicitWidth = 23
-        ExplicitHeight = 22
-      end
-    end
-    object gpFolderPath: TGridPanel
-      Left = 40
-      Top = 0
-      Width = 260
-      Height = 761
+      Height = 40
       Align = alClient
-      BevelOuter = bvNone
-      ColumnCollection = <
-        item
-          Value = 100.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 30.000000000000000000
-        end
-        item
-          SizeStyle = ssAbsolute
-          Value = 30.000000000000000000
-        end>
-      ControlCollection = <
-        item
-          Column = 0
-          Control = edtFolderPath
-          Row = 0
-        end
-        item
-          Column = 1
-          Control = spbFolderSelect
-          Row = 0
-        end
-        item
-          Column = 0
-          ColumnSpan = 3
-          Control = lbFilesList
-          Row = 1
-        end
-        item
-          Column = 2
-          Control = spbFolderSelectPin
-          Row = 0
-        end>
-      RowCollection = <
-        item
-          SizeStyle = ssAbsolute
-          Value = 28.000000000000000000
-        end
-        item
-          Value = 100.000000000000000000
-        end>
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = OpenFileClick
+      ExplicitTop = 240
+    end
+    object spbOpenFolder: TSpeedButton
+      Left = 0
+      Top = 40
+      Width = 40
+      Height = 40
+      Align = alClient
+      AllowAllUp = True
+      GroupIndex = 1
+      Down = True
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = OpenFolderClick
+      ExplicitTop = 280
+    end
+    object spbSaveFile: TSpeedButton
+      Left = 0
+      Top = 80
+      Width = 40
+      Height = 40
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = SaveFileClick
+      ExplicitTop = 320
+    end
+    object spbSaveFileAs: TSpeedButton
+      Left = 0
+      Top = 120
+      Width = 40
+      Height = 40
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = SaveFileAsClick
+      ExplicitTop = 360
+    end
+    object spbExportJson: TSpeedButton
+      Left = 0
+      Top = 160
+      Width = 40
+      Height = 40
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ExportJsonClick
+      ExplicitTop = 400
+    end
+    object spbImportJson: TSpeedButton
+      Left = 0
+      Top = 200
+      Width = 40
+      Height = 40
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ImportJsonClick
+      ExplicitTop = 440
+    end
+    object spbExitApp: TSpeedButton
+      Left = 0
+      Top = 721
+      Width = 40
+      Height = 40
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = ExitClick
+    end
+  end
+  object gpFolderPath: TGridPanel
+    Left = 40
+    Top = 0
+    Width = 260
+    Height = 761
+    Align = alLeft
+    BevelOuter = bvNone
+    ColumnCollection = <
+      item
+        Value = 100.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 30.000000000000000000
+      end>
+    ControlCollection = <
+      item
+        Column = 0
+        Control = edtFolderPath
+        Row = 0
+      end
+      item
+        Column = 1
+        Control = spbFolderSelect
+        Row = 0
+      end
+      item
+        Column = 0
+        ColumnSpan = 2
+        Control = lbFilesList
+        Row = 1
+      end>
+    RowCollection = <
+      item
+        SizeStyle = ssAbsolute
+        Value = 28.000000000000000000
+      end
+      item
+        Value = 100.000000000000000000
+      end>
+    TabOrder = 1
+    Visible = False
+    object edtFolderPath: TEdit
+      Left = 0
+      Top = 0
+      Width = 230
+      Height = 28
+      Align = alClient
+      TabOrder = 0
+      OnEnter = edtFolderPathEnter
+      OnKeyDown = edtFolderPathKeyDown
+      ExplicitHeight = 23
+    end
+    object spbFolderSelect: TSpeedButton
+      Left = 230
+      Top = 0
+      Width = 30
+      Height = 28
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = spbFolderSelectClick
+    end
+    object lbFilesList: TListBox
+      Left = 0
+      Top = 28
+      Width = 260
+      Height = 733
+      Align = alClient
+      ItemHeight = 15
       TabOrder = 1
-      object edtFolderPath: TEdit
-        Left = 0
-        Top = 0
-        Width = 200
-        Height = 28
-        Align = alClient
+      OnDblClick = lbFilesListDblClick
+    end
+  end
+  object PanelTree: TPanel
+    Left = 647
+    Top = 0
+    Width = 300
+    Height = 761
+    Align = alRight
+    BevelOuter = bvNone
+    TabOrder = 2
+    ExplicitLeft = 300
+    object PanelTreeTop: TPanel
+      Left = 0
+      Top = 0
+      Width = 300
+      Height = 82
+      Align = alTop
+      BevelOuter = bvNone
+      TabOrder = 0
+      object lblView: TLabel
+        Left = 8
+        Top = 8
+        Width = 25
+        Height = 15
+        Caption = 'View'
+      end
+      object lblSearch: TLabel
+        Left = 8
+        Top = 56
+        Width = 35
+        Height = 15
+        Caption = 'Search'
+      end
+      object cboView: TComboBox
+        Left = 8
+        Top = 27
+        Width = 284
+        Height = 23
+        Style = csDropDownList
         TabOrder = 0
-        OnEnter = edtFolderPathEnter
-        OnKeyDown = edtFolderPathKeyDown
-        ExplicitHeight = 23
+        OnChange = cboViewChange
       end
-      object spbFolderSelect: TSpeedButton
-        Left = 200
-        Top = 0
-        Width = 30
-        Height = 28
-        Align = alClient
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = spbFolderSelectClick
-        ExplicitLeft = 253
-        ExplicitTop = 4
-        ExplicitWidth = 23
-        ExplicitHeight = 22
-      end
-      object lbFilesList: TListBox
-        Left = 0
-        Top = 28
-        Width = 260
-        Height = 733
-        Align = alClient
-        ItemHeight = 15
+      object edtSearch: TEdit
+        Left = 50
+        Top = 53
+        Width = 163
+        Height = 23
         TabOrder = 1
-        OnDblClick = lbFilesListDblClick
+        OnKeyDown = edtSearchKeyDown
       end
-      object spbFolderSelectPin: TSpeedButton
-        Left = 230
-        Top = 0
-        Width = 30
-        Height = 28
-        Align = alClient
-        AllowAllUp = True
-        GroupIndex = 1
-        Down = True
-        Flat = True
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = spbFolderSelectPinClick
-        ExplicitLeft = 253
-        ExplicitTop = 4
-        ExplicitWidth = 23
-        ExplicitHeight = 22
+      object btnFindNext: TButton
+        Left = 219
+        Top = 52
+        Width = 34
+        Height = 25
+        Hint = 'Next (F3)'
+        Caption = #9660
+        TabOrder = 2
+        OnClick = btnFindNextClick
+      end
+      object btnFindPrev: TButton
+        Left = 258
+        Top = 52
+        Width = 34
+        Height = 25
+        Hint = 'Previous (Shift+F3)'
+        Caption = #9650
+        TabOrder = 3
+        OnClick = btnFindPrevClick
       end
     end
+    object TreeJson: TTreeView
+      Left = 0
+      Top = 82
+      Width = 300
+      Height = 679
+      Align = alClient
+      HideSelection = False
+      Indent = 19
+      TabOrder = 1
+      OnChange = TreeJsonChange
+    end
+  end
+  object PanelEdit: TPanel
+    Left = 950
+    Top = 0
+    Width = 300
+    Height = 761
+    Align = alRight
+    BevelOuter = bvNone
+    TabOrder = 4
+    object PanelEditTop: TPanel
+      Left = 0
+      Top = 0
+      Width = 300
+      Height = 82
+      Align = alTop
+      BevelOuter = bvNone
+      TabOrder = 0
+      ExplicitWidth = 647
+      object lblPath: TLabel
+        Left = 8
+        Top = 8
+        Width = 24
+        Height = 15
+        Caption = 'Path'
+      end
+      object btnApply: TButton
+        Left = 6
+        Top = 51
+        Width = 120
+        Height = 25
+        Caption = 'Apply'
+        TabOrder = 0
+        OnClick = btnApplyClick
+      end
+    end
+    object memoValue: TMemo
+      Left = 0
+      Top = 82
+      Width = 300
+      Height = 679
+      Align = alClient
+      ScrollBars = ssBoth
+      TabOrder = 1
+      WordWrap = False
+      OnChange = memoValueChange
+      OnExit = memoValueExit
+      OnKeyDown = memoValueKeyDown
+      ExplicitWidth = 647
+    end
+  end
+  object memoJson: TMemo
+    Left = 300
+    Top = 0
+    Width = 344
+    Height = 761
+    Align = alClient
+    TabOrder = 5
+    WordWrap = False
+    OnChange = memoJsonChange
+    ExplicitWidth = 300
   end
   object MainMenu: TMainMenu
     Left = 112
