@@ -39,14 +39,18 @@ object frmMain: TfrmMain
       Height = 3
       Cursor = crVSplit
       Align = alTop
+      Color = clHighlight
       MinSize = 100
+      ParentColor = False
       ExplicitWidth = 200
     end
     object splEditJSON: TSplitter
       Left = 300
       Top = 228
       Height = 533
+      Color = clHighlight
       MinSize = 100
+      ParentColor = False
       ExplicitLeft = 368
       ExplicitTop = 320
       ExplicitHeight = 100
