@@ -7,7 +7,6 @@ uses
 
 const
   cFontAwesomeName = 'FontAwesome';
-
   fa_file_o = WideChar($F016);
   fa_folder = WideChar($F07B);
   fa_folder_open = WideChar($F07C);
@@ -18,8 +17,8 @@ const
   fa_sign_out = WideChar($F08B);
 
 function RegisterFontAwesome: Boolean;
-procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string;
-  AFontSize: Integer = 16);
+
+procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string; AFontSize: Integer = 16);
 
 implementation
 
@@ -42,9 +41,8 @@ begin
     ExtractFilePath(Application.ExeName) + 'fonts\fontawesome-webfont.ttf',
     ExtractFilePath(Application.ExeName) + 'fontawesome-webfont.ttf',
     ExtractFilePath(ParamStr(0)) + '..\fonts\fontawesome-webfont.ttf',
-    ExtractFilePath(ParamStr(0)) + '..\..\font-awesome-4.7.0\fonts\fontawesome-webfont.ttf',
-    'D:\DelphiProjects\font-awesome-4.7.0\fonts\fontawesome-webfont.ttf',
-    'D:\DelphiProjects\SaveEditor\fonts\fontawesome-webfont.ttf');
+    ExtractFilePath(ParamStr(0)) + '..\..\font-awesome-4.7.0\fonts\fontawesome-webfont.ttf'
+  );
   for Path in Paths do
   begin
     if FileExists(Path) and (AddFontResource(PChar(Path)) > 0) then
@@ -59,8 +57,7 @@ begin
   Result := False;
 end;
 
-procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string;
-  AFontSize: Integer);
+procedure SetupSpeedButtonIcon(AButton: TSpeedButton; AIcon: WideChar; const AHint: string; AFontSize: Integer);
 begin
   AButton.Font.Name := cFontAwesomeName;
   AButton.Font.Charset := DEFAULT_CHARSET;
@@ -78,3 +75,4 @@ finalization
     RemoveFontResource(PChar(GFontPath));
 
 end.
+

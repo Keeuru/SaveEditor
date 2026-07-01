@@ -1,4 +1,4 @@
-﻿unit MainForm;
+unit MainForm;
 
 interface
 
@@ -6,8 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Menus, Vcl.AppEvnts, XSuperObject, XSuperJSON, SaveCodec, SaveSlots, Vcl.Buttons,
-  Vcl.WinXCtrls, FontAwesome;
+  Vcl.Menus, Vcl.AppEvnts, XSuperObject, XSuperJSON, SaveCodec, SaveSlots,
+  Vcl.Buttons, Vcl.WinXCtrls, FontAwesome;
 
 type
   TfrmMain = class(TForm)

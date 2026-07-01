@@ -300,6 +300,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = OpenFolderClick
         ExplicitTop = 8
@@ -313,6 +314,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = SaveFileClick
         ExplicitLeft = 13
@@ -327,6 +329,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = SaveFileAsClick
         ExplicitLeft = 13
@@ -341,6 +344,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = ExportJsonClick
         ExplicitLeft = 13
@@ -355,6 +359,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = ImportJsonClick
         ExplicitLeft = 13
@@ -369,6 +374,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = OpenFileClick
         ExplicitLeft = -6
@@ -381,6 +387,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = ExitClick
         ExplicitLeft = 8
@@ -430,8 +437,6 @@ object frmMain: TfrmMain
           Value = 100.000000000000000000
         end>
       TabOrder = 1
-      ExplicitLeft = 50
-      ExplicitWidth = 250
       object edtFolderPath: TEdit
         Left = 0
         Top = 0
@@ -441,7 +446,6 @@ object frmMain: TfrmMain
         TabOrder = 0
         OnEnter = edtFolderPathEnter
         OnKeyDown = edtFolderPathKeyDown
-        ExplicitWidth = 220
         ExplicitHeight = 23
       end
       object spbFolderSelect: TSpeedButton
@@ -451,6 +455,7 @@ object frmMain: TfrmMain
         Height = 28
         Align = alClient
         Flat = True
+        ParentShowHint = False
         ShowHint = True
         OnClick = spbFolderSelectClick
         ExplicitLeft = 253
@@ -467,7 +472,6 @@ object frmMain: TfrmMain
         ItemHeight = 15
         TabOrder = 1
         OnDblClick = lbFilesListDblClick
-        ExplicitWidth = 250
       end
     end
   end
