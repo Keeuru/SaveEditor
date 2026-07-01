@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, System.JSON,
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Menus, Vcl.AppEvnts, SaveCodec, SaveSlots, Vcl.Buttons, Vcl.WinXCtrls;
+  Vcl.Menus, Vcl.AppEvnts, SaveCodec, SaveSlots, Vcl.Buttons, Vcl.WinXCtrls, FontAwesome;
 
 type
   TfrmMain = class(TForm)
@@ -123,6 +123,7 @@ type
     procedure StopFolderWatch;
     procedure CheckFolderWatch;
     procedure OnApplicationActivated;
+    procedure SetupSpeedButtons;
   protected
     procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
   public
@@ -149,6 +150,7 @@ begin
   JsonOpenDialog.Filter := JsonSaveDialog.Filter;
   ClearDocument;
   svMainLeft.Opened := False;
+  SetupSpeedButtons;
   if ParamCount >= 1 then
     LoadDocument(ParamStr(1));
 end;
@@ -1209,6 +1211,21 @@ begin
     Exit;
   FilePath := IncludeTrailingPathDelimiter(Trim(edtFolderPath.Text)) + lbFilesList.Items[lbFilesList.ItemIndex];
   LoadDocument(FilePath);
+end;
+
+procedure TfrmMain.SetupSpeedButtons;
+begin
+  if not RegisterFontAwesome then
+    Exit;
+
+  SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18);
+  SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Показать панель папки', 18);
+  SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18);
+  SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18);
+  SetupSpeedButtonIcon(spbExportJson, fa_download, 'Экспорт в JSON...', 18);
+  SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18);
+  SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18);
+  SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14);
 end;
 
 end.

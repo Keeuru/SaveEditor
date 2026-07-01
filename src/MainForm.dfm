@@ -300,6 +300,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ShowHint = True
         OnClick = OpenFolderClick
         ExplicitTop = 8
         ExplicitWidth = 50
@@ -312,6 +313,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ShowHint = True
         OnClick = SaveFileClick
         ExplicitLeft = 13
         ExplicitTop = 8
@@ -325,6 +327,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ShowHint = True
         OnClick = SaveFileAsClick
         ExplicitLeft = 13
         ExplicitTop = 8
@@ -338,6 +341,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ShowHint = True
         OnClick = ExportJsonClick
         ExplicitLeft = 13
         ExplicitTop = 8
@@ -351,6 +355,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ShowHint = True
         OnClick = ImportJsonClick
         ExplicitLeft = 13
         ExplicitTop = 8
@@ -364,6 +369,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ShowHint = True
         OnClick = OpenFileClick
         ExplicitLeft = -6
         ExplicitTop = 234
@@ -375,6 +381,7 @@ object frmMain: TfrmMain
         Height = 40
         Align = alClient
         Flat = True
+        ShowHint = True
         OnClick = ExitClick
         ExplicitLeft = 8
         ExplicitTop = 8
@@ -443,8 +450,8 @@ object frmMain: TfrmMain
         Width = 30
         Height = 28
         Align = alClient
-        Caption = '...'
         Flat = True
+        ShowHint = True
         OnClick = spbFolderSelectClick
         ExplicitLeft = 253
         ExplicitTop = 4

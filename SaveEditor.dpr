@@ -2,14 +2,15 @@
 
 uses
   Vcl.Forms,
+  Vcl.Themes,
+  Vcl.Styles,
   MainForm in 'src\MainForm.pas' {frmMain},
   LZString in 'src\LZString.pas',
+  FontAwesome in 'src\FontAwesome.pas',
   SaveCodec in 'src\SaveCodec.pas',
   SaveSlots in 'src\SaveSlots.pas',
   XSuperJSON in 'src\XSuperJSON.pas',
-  XSuperObject in 'src\XSuperObject.pas',
-  Vcl.Themes,
-  Vcl.Styles;
+  XSuperObject in 'src\XSuperObject.pas';
 
 {$R *.res}
 
