@@ -4,10 +4,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, System.JSON,
-  System.IOUtils, System.Generics.Collections, System.UITypes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.Menus, Vcl.AppEvnts,
-  SaveCodec, SaveSlots, Vcl.Buttons;
+  System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.Menus, Vcl.AppEvnts, SaveCodec, SaveSlots, Vcl.Buttons, Vcl.WinXCtrls;
 
 type
   TfrmMain = class(TForm)
@@ -25,9 +24,6 @@ type
     JsonSaveDialog: TSaveDialog;
     JsonOpenDialog: TOpenDialog;
     StatusBar: TStatusBar;
-    PageControl: TPageControl;
-    tabTree: TTabSheet;
-    tabJson: TTabSheet;
     Splitter1: TSplitter;
     PanelTree: TPanel;
     PanelTreeTop: TPanel;
@@ -54,8 +50,10 @@ type
     edtFolderPath: TEdit;
     spbFolderPath: TSpeedButton;
     lbFilesList: TListBox;
-    Splitter2: TSplitter;
     ApplicationEvents: TApplicationEvents;
+    Panel1: TPanel;
+    Splitter2: TSplitter;
+    Splitter3: TSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure AppActivate(Sender: TObject);
@@ -74,7 +72,6 @@ type
     procedure memoJsonChange(Sender: TObject);
     procedure mnuFormatJsonClick(Sender: TObject);
     procedure mnuReloadTreeClick(Sender: TObject);
-    procedure PageControlChange(Sender: TObject);
     procedure cboViewChange(Sender: TObject);
     procedure btnFindNextClick(Sender: TObject);
     procedure btnFindPrevClick(Sender: TObject);
@@ -83,6 +80,7 @@ type
     procedure spbFolderPathClick(Sender: TObject);
     procedure edtFolderPathKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure lbFilesListDblClick(Sender: TObject);
+    procedure edtFolderPathEnter(Sender: TObject);
   private
     FJsonRoot: TJSONValue;
     FNodeKeys: TDictionary<TTreeNode, string>;
@@ -93,6 +91,7 @@ type
     FDirChangeHandle: THandle;
     FMemoNode: TTreeNode;
     FMemoDirty: Boolean;
+    FJsonMemoDirty: Boolean;
     procedure SetModified(AValue: Boolean);
     procedure UpdateCaption;
     procedure UpdateStatus;
@@ -140,6 +139,7 @@ begin
   FDirChangeHandle := 0;
   FMemoNode := nil;
   FMemoDirty := False;
+  FJsonMemoDirty := False;
   FNodeKeys := TDictionary<TTreeNode, string>.Create;
   OpenDialog.Filter := 'Файлы сохранения (*.save)|*.save|Все файлы (*.*)|*.*';
   SaveDialog.Filter := OpenDialog.Filter;
@@ -208,6 +208,7 @@ begin
   FLastSearchNode := nil;
   FMemoNode := nil;
   FMemoDirty := False;
+  FJsonMemoDirty := False;
   TreeJson.Items.Clear;
   FNodeKeys.Clear;
   cboView.Items.Clear;
@@ -272,6 +273,7 @@ begin
         memoJson.Lines.Text := FormatJson(FJsonRoot);
     finally
       FUpdating := False;
+      FJsonMemoDirty := False;
     end;
   end;
 end;
@@ -561,14 +563,14 @@ begin
   end
   else if (AValue is TJSONTrue) or (AValue is TJSONFalse) then
   begin
-    MessageDlg('Для логических значений используйте вкладку JSON.', mtInformation, [mbOK], 0);
+    MessageDlg('Для логических значений используйте поле JSON.', mtInformation, [mbOK], 0);
     Exit;
   end
   else if AValue is TJSONNull then
   begin
     if not SameText(S, 'null') then
     begin
-      MessageDlg('Для null используйте вкладку JSON.', mtInformation, [mbOK], 0);
+      MessageDlg('Для null используйте поле JSON.', mtInformation, [mbOK], 0);
       Exit;
     end;
     NewVal := TJSONNull.Create;
@@ -609,8 +611,7 @@ end;
 
 function TfrmMain.NodeMatchesSearch(ANode: TTreeNode; const ASearch: string): Boolean;
 begin
-  Result := (ANode <> nil) and (ASearch <> '') and
-    (Pos(UpperCase(ASearch), UpperCase(ANode.Text)) > 0);
+  Result := (ANode <> nil) and (ASearch <> '') and (Pos(UpperCase(ASearch), UpperCase(ANode.Text)) > 0);
 end;
 
 procedure TfrmMain.CollectNodes(ANode: TTreeNode; AList: TList<TTreeNode>);
@@ -745,18 +746,17 @@ begin
   if not ApplyMemoIfDirty then
     Exit;
   try
-    if PageControl.ActivePage = tabJson then
+    if FJsonMemoDirty then
     begin
       if cboView.ItemIndex > 0 then
-        MessageDlg('На вкладке JSON отображается выбранный фрагмент. ' +
-          'Для сохранения всего .save переключите «Просмотр» на «Весь файл» или примените правки через дерево.',
-          mtInformation, [mbOK], 0)
+        MessageDlg('Отображается выбранный фрагмент. ' + 'Для сохранения всего .save выберите «Просмотр» на «Весь файл» или примените правки через дерево.', mtInformation, [mbOK], 0)
       else
       begin
         FreeAndNil(FJsonRoot);
         FJsonRoot := ParseJsonText(memoJson.Text);
         RefreshViewCombo;
         RebuildTree;
+        FJsonMemoDirty := False;
       end;
     end;
     SaveSaveToFile(AFileName, FJsonRoot);
@@ -869,8 +869,7 @@ begin
     ApplyJsonFromText(Text);
     FFileName := '';
     UpdateCaption;
-    MessageDlg('JSON загружен. Сохраните как .save, чтобы использовать в игре.',
-      mtInformation, [mbOK], 0);
+    MessageDlg('JSON загружен. Сохраните как .save, чтобы использовать в игре.', mtInformation, [mbOK], 0);
   except
     on E: Exception do
       MessageDlg('Ошибка импорта: ' + E.Message, mtError, [mbOK], 0);
@@ -932,6 +931,7 @@ procedure TfrmMain.memoJsonChange(Sender: TObject);
 begin
   if FUpdating then
     Exit;
+  FJsonMemoDirty := True;
   SetModified(True);
 end;
 
@@ -968,10 +968,10 @@ begin
         RefreshViewCombo;
       end
       else
-        MessageDlg('Применение JSON из фрагмента к полному файлу пока не поддерживается. ' +
-          'Выберите «Весь файл» или правьте через дерево.', mtInformation, [mbOK], 0);
+        MessageDlg('Применение JSON из фрагмента к полному файлу пока не поддерживается. ' + 'Выберите «Весь файл» или правьте через дерево.', mtInformation, [mbOK], 0);
       RebuildTree;
       SetModified(True);
+      FJsonMemoDirty := False;
     finally
       Parsed.Free;
     end;
@@ -981,20 +981,11 @@ begin
   end;
 end;
 
-procedure TfrmMain.PageControlChange(Sender: TObject);
-begin
-  if FUpdating or (FJsonRoot = nil) then
-    Exit;
-  if PageControl.ActivePage = tabJson then
-  begin
-    ApplyMemoIfDirty;
-    SyncJsonMemo;
-  end;
-end;
-
 procedure TfrmMain.cboViewChange(Sender: TObject);
 begin
   if FUpdating or (FJsonRoot = nil) then
+    Exit;
+  if not ApplyMemoIfDirty then
     Exit;
   FLastSearchNode := nil;
   RebuildTree;
@@ -1006,8 +997,6 @@ procedure TfrmMain.btnFindNextClick(Sender: TObject);
 var
   N: TTreeNode;
 begin
-  if PageControl.ActivePage <> tabTree then
-    PageControl.ActivePage := tabTree;
   N := FindSearchNode(True);
   if N <> nil then
     FocusSearchNode(N)
@@ -1019,8 +1008,6 @@ procedure TfrmMain.btnFindPrevClick(Sender: TObject);
 var
   N: TTreeNode;
 begin
-  if PageControl.ActivePage <> tabTree then
-    PageControl.ActivePage := tabTree;
   N := FindSearchNode(False);
   if N <> nil then
     FocusSearchNode(N)
@@ -1047,7 +1034,6 @@ end;
 
 procedure TfrmMain.mnuFindClick(Sender: TObject);
 begin
-  PageControl.ActivePage := tabTree;
   edtSearch.SetFocus;
   edtSearch.SelectAll;
 end;
@@ -1114,11 +1100,7 @@ begin
   if (Folder = '') or not TDirectory.Exists(Folder) then
     Exit;
 
-  FDirChangeHandle := FindFirstChangeNotification(
-    PChar(ExcludeTrailingPathDelimiter(Folder)),
-    False,
-    FILE_NOTIFY_CHANGE_FILE_NAME or FILE_NOTIFY_CHANGE_SIZE or
-    FILE_NOTIFY_CHANGE_LAST_WRITE);
+  FDirChangeHandle := FindFirstChangeNotification(PChar(ExcludeTrailingPathDelimiter(Folder)), False, FILE_NOTIFY_CHANGE_FILE_NAME or FILE_NOTIFY_CHANGE_SIZE or FILE_NOTIFY_CHANGE_LAST_WRITE);
   if FDirChangeHandle = INVALID_HANDLE_VALUE then
     FDirChangeHandle := 0;
 end;
@@ -1196,6 +1178,11 @@ begin
   end;
 end;
 
+procedure TfrmMain.edtFolderPathEnter(Sender: TObject);
+begin
+  LoadKeyboardLayout('00000409'{ENG_KEYBOARD}, KLF_ACTIVATE);
+end;
+
 procedure TfrmMain.edtFolderPathKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   if Key = VK_RETURN then
@@ -1213,9 +1200,9 @@ begin
     Exit;
   if not ConfirmSaveIfModified then
     Exit;
-  FilePath := IncludeTrailingPathDelimiter(Trim(edtFolderPath.Text)) +
-    lbFilesList.Items[lbFilesList.ItemIndex];
+  FilePath := IncludeTrailingPathDelimiter(Trim(edtFolderPath.Text)) + lbFilesList.Items[lbFilesList.ItemIndex];
   LoadDocument(FilePath);
 end;
 
 end.
+

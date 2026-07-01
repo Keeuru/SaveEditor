@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'Save Editor'
-  ClientHeight = 600
-  ClientWidth = 984
+  ClientHeight = 780
+  ClientWidth = 1250
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,199 +15,25 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object Splitter2: TSplitter
-    Left = 701
+  object Splitter1: TSplitter
+    Left = 280
     Top = 0
-    Height = 581
-    Align = alRight
-    ExplicitLeft = 632
-    ExplicitTop = 240
-    ExplicitHeight = 100
+    Height = 761
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 581
-    Width = 984
+    Top = 761
+    Width = 1250
     Height = 19
     Panels = <>
     SimplePanel = True
   end
-  object PageControl: TPageControl
+  object gpFolderPath: TGridPanel
     Left = 0
     Top = 0
-    Width = 701
-    Height = 581
-    ActivePage = tabTree
-    Align = alClient
-    TabOrder = 0
-    OnChange = PageControlChange
-    object tabTree: TTabSheet
-      Caption = 'Tree'
-      object Splitter1: TSplitter
-        Left = 300
-        Top = 0
-        Width = 5
-        Height = 551
-        ExplicitLeft = 200
-        ExplicitHeight = 573
-      end
-      object PanelTree: TPanel
-        Left = 0
-        Top = 0
-        Width = 300
-        Height = 551
-        Align = alLeft
-        BevelOuter = bvNone
-        TabOrder = 0
-        object PanelTreeTop: TPanel
-          Left = 0
-          Top = 0
-          Width = 300
-          Height = 82
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 0
-          object lblView: TLabel
-            Left = 8
-            Top = 8
-            Width = 25
-            Height = 15
-            Caption = 'View'
-          end
-          object lblSearch: TLabel
-            Left = 8
-            Top = 56
-            Width = 35
-            Height = 15
-            Caption = 'Search'
-          end
-          object cboView: TComboBox
-            Left = 8
-            Top = 27
-            Width = 284
-            Height = 23
-            Style = csDropDownList
-            TabOrder = 0
-            OnChange = cboViewChange
-          end
-          object edtSearch: TEdit
-            Left = 50
-            Top = 53
-            Width = 163
-            Height = 23
-            TabOrder = 1
-            OnKeyDown = edtSearchKeyDown
-          end
-          object btnFindNext: TButton
-            Left = 219
-            Top = 52
-            Width = 34
-            Height = 25
-            Hint = 'Next (F3)'
-            Caption = #9660
-            TabOrder = 2
-            OnClick = btnFindNextClick
-          end
-          object btnFindPrev: TButton
-            Left = 258
-            Top = 52
-            Width = 34
-            Height = 25
-            Hint = 'Previous (Shift+F3)'
-            Caption = #9650
-            TabOrder = 3
-            OnClick = btnFindPrevClick
-          end
-        end
-        object TreeJson: TTreeView
-          Left = 0
-          Top = 82
-          Width = 300
-          Height = 469
-          Align = alClient
-          HideSelection = False
-          Indent = 19
-          TabOrder = 1
-          OnChange = TreeJsonChange
-        end
-      end
-      object PanelEdit: TPanel
-        Left = 305
-        Top = 0
-        Width = 388
-        Height = 551
-        Align = alClient
-        BevelOuter = bvNone
-        TabOrder = 1
-        object PanelEditTop: TPanel
-          Left = 0
-          Top = 0
-          Width = 388
-          Height = 64
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 0
-          object lblPath: TLabel
-            Left = 8
-            Top = 8
-            Width = 24
-            Height = 15
-            Caption = 'Path'
-          end
-          object btnApply: TButton
-            Left = 8
-            Top = 32
-            Width = 120
-            Height = 25
-            Caption = 'Apply'
-            TabOrder = 0
-            OnClick = btnApplyClick
-          end
-        end
-        object memoValue: TMemo
-          Left = 0
-          Top = 64
-          Width = 388
-          Height = 487
-          Align = alClient
-          ScrollBars = ssBoth
-          TabOrder = 1
-          WordWrap = False
-          OnChange = memoValueChange
-          OnExit = memoValueExit
-          OnKeyDown = memoValueKeyDown
-        end
-      end
-    end
-    object tabJson: TTabSheet
-      Caption = 'JSON'
-      ImageIndex = 1
-      object memoJson: TMemo
-        Left = 0
-        Top = 0
-        Width = 693
-        Height = 551
-        Align = alClient
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Consolas'
-        Font.Style = []
-        ParentFont = False
-        ScrollBars = ssBoth
-        TabOrder = 0
-        WantTabs = True
-        WordWrap = False
-        OnChange = memoJsonChange
-      end
-    end
-  end
-  object gpFolderPath: TGridPanel
-    Left = 704
-    Top = 0
     Width = 280
-    Height = 581
-    Align = alRight
+    Height = 761
+    Align = alLeft
     BevelOuter = bvNone
     ColumnCollection = <
       item
@@ -237,51 +63,244 @@ object frmMain: TfrmMain
     RowCollection = <
       item
         SizeStyle = ssAbsolute
-        Value = 30.000000000000000000
+        Value = 28.000000000000000000
       end
       item
         Value = 100.000000000000000000
       end>
-    TabOrder = 2
-    DesignSize = (
-      280
-      581)
+    TabOrder = 0
+    ExplicitTop = 225
+    ExplicitHeight = 536
     object edtFolderPath: TEdit
       Left = 0
       Top = 0
       Width = 250
-      Height = 30
+      Height = 28
       Align = alClient
       TabOrder = 0
+      OnEnter = edtFolderPathEnter
       OnKeyDown = edtFolderPathKeyDown
       ExplicitHeight = 23
     end
     object spbFolderPath: TSpeedButton
-      Left = 253
-      Top = 4
-      Width = 23
-      Height = 22
-      Anchors = []
+      Left = 250
+      Top = 0
+      Width = 30
+      Height = 28
+      Align = alClient
       Caption = '...'
       Flat = True
       OnClick = spbFolderPathClick
-      ExplicitLeft = 264
-      ExplicitTop = 8
+      ExplicitLeft = 253
+      ExplicitTop = 4
+      ExplicitWidth = 23
+      ExplicitHeight = 22
     end
     object lbFilesList: TListBox
       Left = 0
-      Top = 30
+      Top = 28
       Width = 280
-      Height = 551
+      Height = 733
       Align = alClient
       ItemHeight = 15
       TabOrder = 1
       OnDblClick = lbFilesListDblClick
+      ExplicitTop = 30
+      ExplicitHeight = 506
+    end
+  end
+  object Panel1: TPanel
+    Left = 283
+    Top = 0
+    Width = 967
+    Height = 761
+    Align = alClient
+    BevelOuter = bvNone
+    ParentColor = True
+    TabOrder = 2
+    ExplicitLeft = 352
+    ExplicitTop = 128
+    ExplicitWidth = 857
+    ExplicitHeight = 425
+    object Splitter2: TSplitter
+      Left = 0
+      Top = 225
+      Width = 967
+      Height = 3
+      Cursor = crVSplit
+      Align = alTop
+      ExplicitWidth = 200
+    end
+    object Splitter3: TSplitter
+      Left = 300
+      Top = 228
+      Height = 533
+      ExplicitLeft = 368
+      ExplicitTop = 320
+      ExplicitHeight = 100
+    end
+    object memoJson: TMemo
+      Left = 0
+      Top = 0
+      Width = 967
+      Height = 225
+      Align = alTop
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Consolas'
+      Font.Style = []
+      ParentFont = False
+      ScrollBars = ssBoth
+      TabOrder = 0
+      WantTabs = True
+      WordWrap = False
+      OnChange = memoJsonChange
+      ExplicitTop = -48
+      ExplicitWidth = 925
+    end
+    object PanelTree: TPanel
+      Left = 0
+      Top = 228
+      Width = 300
+      Height = 533
+      Align = alLeft
+      BevelOuter = bvNone
+      TabOrder = 1
+      ExplicitLeft = 280
+      ExplicitTop = 0
+      ExplicitHeight = 761
+      object PanelTreeTop: TPanel
+        Left = 0
+        Top = 0
+        Width = 300
+        Height = 82
+        Align = alTop
+        BevelOuter = bvNone
+        TabOrder = 0
+        object lblView: TLabel
+          Left = 8
+          Top = 8
+          Width = 25
+          Height = 15
+          Caption = 'View'
+        end
+        object lblSearch: TLabel
+          Left = 8
+          Top = 56
+          Width = 35
+          Height = 15
+          Caption = 'Search'
+        end
+        object cboView: TComboBox
+          Left = 8
+          Top = 27
+          Width = 284
+          Height = 23
+          Style = csDropDownList
+          TabOrder = 0
+          OnChange = cboViewChange
+        end
+        object edtSearch: TEdit
+          Left = 50
+          Top = 53
+          Width = 163
+          Height = 23
+          TabOrder = 1
+          OnKeyDown = edtSearchKeyDown
+        end
+        object btnFindNext: TButton
+          Left = 219
+          Top = 52
+          Width = 34
+          Height = 25
+          Hint = 'Next (F3)'
+          Caption = #9660
+          TabOrder = 2
+          OnClick = btnFindNextClick
+        end
+        object btnFindPrev: TButton
+          Left = 258
+          Top = 52
+          Width = 34
+          Height = 25
+          Hint = 'Previous (Shift+F3)'
+          Caption = #9650
+          TabOrder = 3
+          OnClick = btnFindPrevClick
+        end
+      end
+      object TreeJson: TTreeView
+        Left = 0
+        Top = 82
+        Width = 300
+        Height = 451
+        Align = alClient
+        HideSelection = False
+        Indent = 19
+        TabOrder = 1
+        OnChange = TreeJsonChange
+        ExplicitHeight = 679
+      end
+    end
+    object PanelEdit: TPanel
+      Left = 303
+      Top = 228
+      Width = 664
+      Height = 533
+      Align = alClient
+      BevelOuter = bvNone
+      TabOrder = 2
+      ExplicitLeft = 285
+      ExplicitTop = 0
+      ExplicitWidth = 965
+      ExplicitHeight = 761
+      object PanelEditTop: TPanel
+        Left = 0
+        Top = 0
+        Width = 664
+        Height = 82
+        Align = alTop
+        BevelOuter = bvNone
+        TabOrder = 0
+        object lblPath: TLabel
+          Left = 8
+          Top = 8
+          Width = 24
+          Height = 15
+          Caption = 'Path'
+        end
+        object btnApply: TButton
+          Left = 6
+          Top = 51
+          Width = 120
+          Height = 25
+          Caption = 'Apply'
+          TabOrder = 0
+          OnClick = btnApplyClick
+        end
+      end
+      object memoValue: TMemo
+        Left = 0
+        Top = 82
+        Width = 664
+        Height = 451
+        Align = alClient
+        ScrollBars = ssBoth
+        TabOrder = 1
+        WordWrap = False
+        OnChange = memoValueChange
+        OnExit = memoValueExit
+        OnKeyDown = memoValueKeyDown
+        ExplicitTop = 64
+        ExplicitWidth = 965
+        ExplicitHeight = 697
+      end
     end
   end
   object MainMenu: TMainMenu
-    Left = 32
-    Top = 80
+    Left = 64
+    Top = 352
     object mnuFile: TMenuItem
       Caption = 'File'
       object mnuOpen: TMenuItem
@@ -345,25 +364,25 @@ object frmMain: TfrmMain
     end
   end
   object OpenDialog: TOpenDialog
-    Left = 120
-    Top = 80
+    Left = 64
+    Top = 408
   end
   object SaveDialog: TSaveDialog
-    Left = 208
-    Top = 80
+    Left = 160
+    Top = 408
   end
   object JsonSaveDialog: TSaveDialog
-    Left = 296
-    Top = 80
+    Left = 160
+    Top = 464
   end
   object JsonOpenDialog: TOpenDialog
-    Left = 384
-    Top = 80
+    Left = 64
+    Top = 464
   end
   object ApplicationEvents: TApplicationEvents
     OnActivate = AppActivate
     OnIdle = AppIdle
-    Left = 472
-    Top = 80
+    Left = 160
+    Top = 352
   end
 end
