@@ -9,6 +9,9 @@ procedure FillSaveViewList(ARoot: ISuperObject; AList: TStrings);
 
 implementation
 
+uses
+  SaveCodec;
+
 procedure AddView(AList: TStrings; const ACaption: string; AValue: IJSONAncestor);
 begin
   AList.AddObject(ACaption, TObject(Pointer(AValue)));

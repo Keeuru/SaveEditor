@@ -27,7 +27,7 @@ procedure SetSpeedButtonIconColor(AButton: TSpeedButton; AIconColor: TColor);
 implementation
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, Vcl.Graphics, Vcl.Forms;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, Vcl.Forms;
 
 var
   GFontLoaded: Boolean;

@@ -106,7 +106,7 @@ var
 begin
   if AJson = nil then
     raise ESaveCodecError.Create('Нет данных для сохранения.');
-  JsonText := JsonToCompact(AJson);
+  JsonText := JsonToCompact(JsonRootAncestor(AJson));
   Result := LZCompressToBase64(JsonText);
 end;
 

@@ -279,10 +279,7 @@ begin
   begin
     FUpdating := True;
     try
-      if (cboView.ItemIndex > 0) and (Pointer(View) <> Pointer(JsonRootAncestor(FJsonRoot))) then
-        memoJson.Lines.Text := FormatJson(View)
-      else
-        memoJson.Lines.Text := FormatJson(FJsonRoot);
+      memoJson.Lines.Text := FormatJson(View);
     finally
       FUpdating := False;
       FJsonMemoDirty := False;
