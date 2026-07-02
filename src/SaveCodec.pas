@@ -47,23 +47,95 @@ begin
   end;
 end;
 
-function FormatJson(AJson: IJSONAncestor): string;
+function PrettyPrintJson(const ACompact: string): string;
+const
+  cIndentStep = 2;
 var
-  Writer: TJSONWriter;
+  I, Level: Integer;
+  C: Char;
+  InString: Boolean;
+  Escaped: Boolean;
+  SB: TStringBuilder;
+  procedure AppendIndent;
+  begin
+    if Level > 0 then
+      SB.Append(StringOfChar(' ', Level * cIndentStep));
+  end;
+
+  procedure AppendLineBreak;
+  begin
+    SB.AppendLine;
+    AppendIndent;
+  end;
+
+begin
+  if ACompact = '' then
+    Exit('');
+
+  SB := TStringBuilder.Create(Length(ACompact) + 256);
+  try
+    Level := 0;
+    InString := False;
+    Escaped := False;
+
+    for I := 1 to Length(ACompact) do
+    begin
+      C := ACompact[I];
+      if InString then
+      begin
+        SB.Append(C);
+        if Escaped then
+          Escaped := False
+        else if C = '\' then
+          Escaped := True
+        else if C = '"' then
+          InString := False;
+        Continue;
+      end;
+
+      case C of
+        '"':
+          begin
+            SB.Append(C);
+            InString := True;
+          end;
+        '{', '[':
+          begin
+            SB.Append(C);
+            Inc(Level);
+            AppendLineBreak;
+          end;
+        '}', ']':
+          begin
+            AppendLineBreak;
+            Dec(Level);
+            SB.Append(C);
+          end;
+        ',':
+          begin
+            SB.Append(C);
+            AppendLineBreak;
+          end;
+        ':':
+          SB.Append(': ');
+        ' ', #9, #10, #13:
+          ;
+      else
+        SB.Append(C);
+      end;
+    end;
+
+    Result := SB.ToString;
+  finally
+    SB.Free;
+  end;
+end;
+
+function FormatJson(AJson: IJSONAncestor): string;
 begin
   if AJson = nil then
     Exit('');
-  if Supports(AJson, ISuperObject) then
-    Exit(ISuperObject(AJson).AsJSON(True))
-  else if Supports(AJson, ISuperArray) then
-    Exit(ISuperArray(AJson).AsJSON(True));
-  Writer := TJSONWriter.Create(True, False);
-  try
-    AJson.AsJSONString(Writer);
-    Result := Writer.ToString;
-  finally
-    Writer.Free;
-  end;
+  Result := PrettyPrintJson(JsonToCompact(AJson));
 end;
 
 function ParseJsonText(const AText: string): ISuperObject;
