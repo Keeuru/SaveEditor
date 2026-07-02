@@ -15,25 +15,15 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object splEditJSON: TSplitter
-    Left = 947
-    Top = 0
-    Height = 761
-    Align = alRight
-    Color = clBlack
-    MinSize = 100
-    ParentColor = False
-    ExplicitLeft = 340
-  end
   object Splitter1: TSplitter
-    Left = 644
+    Left = 847
     Top = 0
     Height = 761
     Align = alRight
     Color = clBlack
     MinSize = 100
     ParentColor = False
-    ExplicitLeft = 476
+    ExplicitLeft = 831
     ExplicitTop = -6
   end
   object StatusBar: TStatusBar
@@ -254,14 +244,19 @@ object frmMain: TfrmMain
     TabOrder = 1
     Visible = False
     object edtFolderPath: TEdit
+      AlignWithMargins = True
       Left = 0
-      Top = 0
+      Top = 4
       Width = 230
-      Height = 28
+      Height = 21
+      Margins.Left = 0
+      Margins.Top = 4
+      Margins.Right = 0
       Align = alClient
       TabOrder = 0
       OnEnter = edtFolderPathEnter
       OnKeyDown = edtFolderPathKeyDown
+      ExplicitTop = 0
       ExplicitHeight = 23
     end
     object spbFolderSelect: TSpeedButton
@@ -287,153 +282,22 @@ object frmMain: TfrmMain
       OnDblClick = flbFilesListDblClick
     end
   end
-  object PanelTree: TPanel
-    Left = 647
-    Top = 0
-    Width = 300
-    Height = 761
-    Align = alRight
-    BevelOuter = bvNone
-    TabOrder = 2
-    object PanelTreeTop: TPanel
-      Left = 0
-      Top = 0
-      Width = 300
-      Height = 82
-      Align = alTop
-      BevelOuter = bvNone
-      TabOrder = 0
-      object lblView: TLabel
-        Left = 8
-        Top = 8
-        Width = 25
-        Height = 15
-        Caption = 'View'
-      end
-      object lblSearch: TLabel
-        Left = 8
-        Top = 56
-        Width = 56
-        Height = 15
-        Caption = 'Search key'
-      end
-      object cboView: TComboBox
-        Left = 8
-        Top = 27
-        Width = 284
-        Height = 23
-        Style = csDropDownList
-        TabOrder = 0
-        OnChange = cboViewChange
-      end
-      object edtSearch: TEdit
-        Left = 50
-        Top = 53
-        Width = 234
-        Height = 23
-        TabOrder = 1
-        OnChange = edtSearchChange
-        OnKeyDown = edtSearchKeyDown
-      end
-    end
-    object vstJson: TVirtualStringTree
-      Left = 0
-      Top = 82
-      Width = 300
-      Height = 679
-      Align = alClient
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = 0
-      Header.Height = 15
-      Header.MainColumn = -1
-      TabOrder = 1
-      OnFocusChanged = vstJsonFocusChanged
-      OnFocusChanging = vstJsonFocusChanging
-      OnFreeNode = vstJsonFreeNode
-      OnGetText = vstJsonGetText
-      OnInitNode = vstJsonInitNode
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <>
-    end
-  end
-  object PanelEdit: TPanel
-    Left = 950
-    Top = 0
-    Width = 300
-    Height = 761
-    Align = alRight
-    BevelOuter = bvNone
-    TabOrder = 4
-    object PanelEditTop: TPanel
-      Left = 0
-      Top = 0
-      Width = 300
-      Height = 82
-      Align = alTop
-      BevelOuter = bvNone
-      TabOrder = 0
-      object lblPath: TLabel
-        Left = 8
-        Top = 8
-        Width = 24
-        Height = 15
-        Caption = 'Path'
-      end
-      object btnApply: TButton
-        Left = 6
-        Top = 51
-        Width = 120
-        Height = 25
-        Caption = 'Apply'
-        TabOrder = 0
-        OnClick = btnApplyClick
-      end
-    end
-    object memoValue: TSynEdit
-      Left = 0
-      Top = 82
-      Width = 300
-      Height = 679
-      Align = alClient
-      CaseSensitive = True
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -13
-      Font.Name = 'Consolas'
-      Font.Style = []
-      Font.Quality = fqClearTypeNatural
-      TabOrder = 1
-      OnExit = memoValueExit
-      OnKeyDown = memoValueKeyDown
-      UseCodeFolding = False
-      Gutter.Font.Charset = DEFAULT_CHARSET
-      Gutter.Font.Color = clWindowText
-      Gutter.Font.Height = -11
-      Gutter.Font.Name = 'Consolas'
-      Gutter.Font.Style = []
-      Gutter.Font.Quality = fqClearTypeNatural
-      Gutter.Bands = <>
-      Highlighter = synJsonHL
-      ScrollbarAnnotations = <>
-      WantTabs = True
-      OnChange = memoValueChange
-    end
-  end
   object memoJson: TSynEdit
     Left = 300
     Top = 0
-    Width = 344
+    Width = 547
     Height = 761
+    Margins.Top = 4
     Align = alClient
     CaseSensitive = True
+    Color = clWheat
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
     Font.Name = 'Consolas'
     Font.Style = []
     Font.Quality = fqClearTypeNatural
-    TabOrder = 5
+    TabOrder = 3
     UseCodeFolding = False
     Gutter.Font.Charset = DEFAULT_CHARSET
     Gutter.Font.Color = clWindowText
@@ -446,10 +310,262 @@ object frmMain: TfrmMain
     ScrollbarAnnotations = <>
     WantTabs = True
     OnChange = memoJsonChange
+    ExplicitLeft = 311
+    ExplicitTop = 51
+    ExplicitWidth = 327
+    ExplicitHeight = 369
+  end
+  object Panel1: TPanel
+    Left = 850
+    Top = 0
+    Width = 400
+    Height = 761
+    Align = alRight
+    BevelOuter = bvNone
+    Caption = 'Panel1'
+    TabOrder = 4
+    object splEditJSON: TSplitter
+      Left = 0
+      Top = 558
+      Width = 400
+      Height = 3
+      Cursor = crVSplit
+      Align = alBottom
+      Color = clBlack
+      MinSize = 100
+      ParentColor = False
+      ExplicitLeft = 310
+      ExplicitTop = 439
+      ExplicitWidth = 218
+    end
+    object GridPanel1: TGridPanel
+      Left = 0
+      Top = 0
+      Width = 400
+      Height = 558
+      Align = alClient
+      BevelOuter = bvNone
+      ColumnCollection = <
+        item
+          SizeStyle = ssAbsolute
+          Value = 60.000000000000000000
+        end
+        item
+          Value = 100.000000000000000000
+        end>
+      ControlCollection = <
+        item
+          Column = 0
+          Control = lblView
+          Row = 0
+        end
+        item
+          Column = 1
+          Control = cboView
+          Row = 0
+        end
+        item
+          Column = 0
+          Control = lblSearch
+          Row = 1
+        end
+        item
+          Column = 1
+          Control = edtSearch
+          Row = 1
+        end
+        item
+          Column = 0
+          ColumnSpan = 2
+          Control = vstJson
+          Row = 2
+        end>
+      RowCollection = <
+        item
+          SizeStyle = ssAbsolute
+          Value = 30.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 30.000000000000000000
+        end
+        item
+          Value = 100.000000000000000000
+        end>
+      TabOrder = 0
+      ExplicitLeft = 72
+      ExplicitTop = -182
+      ExplicitWidth = 241
+      ExplicitHeight = 439
+      object lblView: TLabel
+        Left = 0
+        Top = 0
+        Width = 25
+        Height = 30
+        Align = alLeft
+        Caption = 'View'
+        Layout = tlCenter
+        ExplicitLeft = 8
+        ExplicitTop = 8
+        ExplicitHeight = 15
+      end
+      object cboView: TComboBox
+        AlignWithMargins = True
+        Left = 60
+        Top = 4
+        Width = 340
+        Height = 23
+        Margins.Left = 0
+        Margins.Top = 4
+        Margins.Right = 0
+        Align = alClient
+        Style = csDropDownList
+        TabOrder = 0
+        OnChange = cboViewChange
+        ExplicitWidth = 181
+      end
+      object lblSearch: TLabel
+        Left = 0
+        Top = 30
+        Width = 56
+        Height = 30
+        Align = alLeft
+        Caption = 'Search key'
+        Layout = tlCenter
+        ExplicitLeft = 8
+        ExplicitTop = 56
+        ExplicitHeight = 15
+      end
+      object edtSearch: TEdit
+        AlignWithMargins = True
+        Left = 60
+        Top = 34
+        Width = 340
+        Height = 23
+        Margins.Left = 0
+        Margins.Top = 4
+        Margins.Right = 0
+        Align = alClient
+        TabOrder = 1
+        OnChange = edtSearchChange
+        OnKeyDown = edtSearchKeyDown
+        ExplicitWidth = 181
+      end
+      object vstJson: TVirtualStringTree
+        Left = 0
+        Top = 60
+        Width = 400
+        Height = 498
+        Align = alClient
+        Anchors = []
+        DefaultNodeHeight = 19
+        Header.AutoSizeIndex = 0
+        Header.Height = 15
+        Header.MainColumn = -1
+        TabOrder = 2
+        OnFocusChanged = vstJsonFocusChanged
+        OnFocusChanging = vstJsonFocusChanging
+        OnFreeNode = vstJsonFreeNode
+        OnGetText = vstJsonGetText
+        OnInitNode = vstJsonInitNode
+        Touch.InteractiveGestures = [igPan, igPressAndTap]
+        Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+        ExplicitWidth = 241
+        ExplicitHeight = 379
+        Columns = <>
+      end
+    end
+    object GridPanel2: TGridPanel
+      Left = 0
+      Top = 561
+      Width = 400
+      Height = 200
+      Align = alBottom
+      BevelOuter = bvNone
+      ColumnCollection = <
+        item
+          Value = 50.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 100.000000000000000000
+        end
+        item
+          Value = 50.000000000000000000
+        end>
+      ControlCollection = <
+        item
+          Column = 0
+          ColumnSpan = 3
+          Control = memoValue
+          Row = 0
+        end
+        item
+          Column = 1
+          Control = btnApply
+          Row = 1
+        end>
+      RowCollection = <
+        item
+          Value = 100.000000000000000000
+        end
+        item
+          SizeStyle = ssAbsolute
+          Value = 25.000000000000000000
+        end>
+      TabOrder = 1
+      ExplicitLeft = 6
+      ExplicitTop = 577
+      object memoValue: TSynEdit
+        Left = 0
+        Top = 0
+        Width = 400
+        Height = 175
+        Align = alClient
+        Anchors = []
+        CaseSensitive = True
+        Color = clWheat
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Consolas'
+        Font.Style = []
+        Font.Quality = fqClearTypeNatural
+        TabOrder = 0
+        OnExit = memoValueExit
+        OnKeyDown = memoValueKeyDown
+        UseCodeFolding = False
+        Gutter.Font.Charset = DEFAULT_CHARSET
+        Gutter.Font.Color = clWindowText
+        Gutter.Font.Height = -11
+        Gutter.Font.Name = 'Consolas'
+        Gutter.Font.Style = []
+        Gutter.Font.Quality = fqClearTypeNatural
+        Gutter.Bands = <>
+        Highlighter = synJsonHL
+        ScrollbarAnnotations = <>
+        WantTabs = True
+        OnChange = memoValueChange
+        ExplicitTop = 82
+        ExplicitWidth = 300
+        ExplicitHeight = 679
+      end
+      object btnApply: TButton
+        Left = 150
+        Top = 175
+        Width = 100
+        Height = 25
+        Align = alClient
+        Caption = 'Apply'
+        TabOrder = 1
+        OnClick = btnApplyClick
+        ExplicitTop = 128
+      end
+    end
   end
   object synJsonHL: TSynJSONSyn
-    Left = 40
-    Top = 48
+    Left = 112
+    Top = 536
   end
   object MainMenu: TMainMenu
     Left = 112

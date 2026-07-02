@@ -17,6 +17,7 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  TStyleManager.TrySetStyle('Auric');
   Application.Title := 'Save Editor';
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;

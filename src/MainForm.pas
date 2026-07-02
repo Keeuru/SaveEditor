@@ -31,16 +31,11 @@ type
     JsonSaveDialog: TSaveDialog;
     JsonOpenDialog: TOpenDialog;
     StatusBar: TStatusBar;
-    PanelTree: TPanel;
-    PanelTreeTop: TPanel;
     lblView: TLabel;
     cboView: TComboBox;
     lblSearch: TLabel;
     edtSearch: TEdit;
     vstJson: TVirtualStringTree;
-    PanelEdit: TPanel;
-    PanelEditTop: TPanel;
-    lblPath: TLabel;
     memoValue: TSynEdit;
     btnApply: TButton;
     memoJson: TSynEdit;
@@ -67,6 +62,9 @@ type
     spbOpenFile: TSpeedButton;
     spbExitApp: TSpeedButton;
     Splitter1: TSplitter;
+    GridPanel1: TGridPanel;
+    Panel1: TPanel;
+    GridPanel2: TGridPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure AppActivate(Sender: TObject);
@@ -299,7 +297,6 @@ begin
   cboView.Enabled := False;
   edtSearch.Clear;
   edtSearch.Enabled := False;
-  lblPath.Caption := '';
   memoValue.Clear;
   memoJson.Clear;
   btnApply.Enabled := False;
@@ -589,13 +586,11 @@ begin
   btnApply.Enabled := False;
   if ANode = nil then
   begin
-    lblPath.Caption := '';
     FMemoNode := nil;
     FMemoDirty := False;
     Exit;
   end;
 
-  lblPath.Caption := TreeNodePath(ANode);
   Val := NodeJson(vstJson, ANode);
   if Val = nil then
   begin
@@ -1439,12 +1434,12 @@ begin
   if not RegisterFontAwesome then
     Exit;
 
-  SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18, clNavy);
-  SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18, clGreen);
-  SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18, TColor($0080B000));
-  SetupSpeedButtonIcon(spbExportJson, fa_download, 'Экспорт в JSON...', 18, clPurple);
-  SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18, clMaroon);
-  SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clGray);
+  SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18, clBlack);//clNavy
+  SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18, clBlack);//clGreen
+  SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18, clBlack);//TColor($0080B000)
+  SetupSpeedButtonIcon(spbExportJson, fa_download, 'Экспорт в JSON...', 18, clBlack);//clPurple
+  SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18, clBlack);//clMaroon
+  SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clBlack);//clGray
   SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14, TColor($0000A0D0));
   UpdateFolderPanelVisibility;
 end;
@@ -1492,7 +1487,7 @@ procedure TfrmMain.UpdateFolderPanelVisibility;
 begin
   gpFolderPath.Visible := spbOpenFolder.Down;
   if spbOpenFolder.Down then
-    SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Скрыть панель папки', 18, clTeal)
+    SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Скрыть панель папки', 18, clBlack)//clTeal
   else
     SetupSpeedButtonIcon(spbOpenFolder, fa_folder_open, 'Показать панель папки', 18, clGray);
 end;
