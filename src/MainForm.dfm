@@ -256,7 +256,6 @@ object frmMain: TfrmMain
       TabOrder = 0
       OnEnter = edtFolderPathEnter
       OnKeyDown = edtFolderPathKeyDown
-      ExplicitTop = 0
       ExplicitHeight = 23
     end
     object spbFolderSelect: TSpeedButton
@@ -310,10 +309,6 @@ object frmMain: TfrmMain
     ScrollbarAnnotations = <>
     WantTabs = True
     OnChange = memoJsonChange
-    ExplicitLeft = 311
-    ExplicitTop = 51
-    ExplicitWidth = 327
-    ExplicitHeight = 369
   end
   object Panel1: TPanel
     Left = 850
@@ -393,10 +388,6 @@ object frmMain: TfrmMain
           Value = 100.000000000000000000
         end>
       TabOrder = 0
-      ExplicitLeft = 72
-      ExplicitTop = -182
-      ExplicitWidth = 241
-      ExplicitHeight = 439
       object lblView: TLabel
         Left = 0
         Top = 0
@@ -422,7 +413,6 @@ object frmMain: TfrmMain
         Style = csDropDownList
         TabOrder = 0
         OnChange = cboViewChange
-        ExplicitWidth = 181
       end
       object lblSearch: TLabel
         Left = 0
@@ -449,7 +439,6 @@ object frmMain: TfrmMain
         TabOrder = 1
         OnChange = edtSearchChange
         OnKeyDown = edtSearchKeyDown
-        ExplicitWidth = 181
       end
       object vstJson: TVirtualStringTree
         Left = 0
@@ -461,7 +450,7 @@ object frmMain: TfrmMain
         DefaultNodeHeight = 19
         Header.AutoSizeIndex = 0
         Header.Height = 15
-        Header.MainColumn = -1
+        ParentColor = True
         TabOrder = 2
         OnFocusChanged = vstJsonFocusChanged
         OnFocusChanging = vstJsonFocusChanging
@@ -470,9 +459,19 @@ object frmMain: TfrmMain
         OnInitNode = vstJsonInitNode
         Touch.InteractiveGestures = [igPan, igPressAndTap]
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-        ExplicitWidth = 241
-        ExplicitHeight = 379
-        Columns = <>
+        ExplicitLeft = 3
+        ExplicitTop = 63
+        Columns = <
+          item
+            Position = 0
+            Text = #1050#1083#1102#1095
+            Width = 200
+          end
+          item
+            Position = 1
+            Text = #1047#1085#1072#1095#1077#1085#1080#1077
+            Width = 100
+          end>
       end
     end
     object GridPanel2: TGridPanel
@@ -514,8 +513,6 @@ object frmMain: TfrmMain
           Value = 25.000000000000000000
         end>
       TabOrder = 1
-      ExplicitLeft = 6
-      ExplicitTop = 577
       object memoValue: TSynEdit
         Left = 0
         Top = 0
@@ -546,9 +543,6 @@ object frmMain: TfrmMain
         ScrollbarAnnotations = <>
         WantTabs = True
         OnChange = memoValueChange
-        ExplicitTop = 82
-        ExplicitWidth = 300
-        ExplicitHeight = 679
       end
       object btnApply: TButton
         Left = 150
@@ -559,7 +553,6 @@ object frmMain: TfrmMain
         Caption = 'Apply'
         TabOrder = 1
         OnClick = btnApplyClick
-        ExplicitTop = 128
       end
     end
   end

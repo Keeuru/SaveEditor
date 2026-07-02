@@ -1449,13 +1449,6 @@ var
   Col: TVirtualTreeColumn;
 begin
   vstJson.NodeDataSize := SizeOf(TJsonNodeRef);
-  vstJson.Header.Columns.Clear;
-  Col := vstJson.Header.Columns.Add;
-  Col.Text := 'Ключ';
-  Col.Width := 140;
-  Col := vstJson.Header.Columns.Add;
-  Col.Text := 'Значение';
-  Col.Width := 120;
   vstJson.Header.Options := vstJson.Header.Options + [hoVisible, hoAutoResize, hoColumnResize];
   vstJson.TreeOptions.PaintOptions := vstJson.TreeOptions.PaintOptions + [toShowButtons, toShowRoot, toShowTreeLines];
   vstJson.TreeOptions.MiscOptions := vstJson.TreeOptions.MiscOptions + [toGridExtensions, toFullRepaintOnResize];
