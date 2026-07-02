@@ -274,6 +274,7 @@ var
   procedure OutputW(const AW: string);
   var
     Ch: Integer;
+    ZeroBits: Integer;
   begin
     if DictToCreate.ContainsKey(AW) then
     begin
@@ -285,8 +286,10 @@ var
       end
       else
       begin
-        WriteBits(ContextDataVal, ContextDataPos, ABitsPerChar, Output, 1, ContextNumBits, AGetChar);
-        WriteBits(ContextDataVal, ContextDataPos, ABitsPerChar, Output, 0, ContextNumBits, AGetChar);
+        WriteBits(ContextDataVal, ContextDataPos, ABitsPerChar, Output, 1, 1, AGetChar);
+        ZeroBits := ContextNumBits - 1;
+        if ZeroBits > 0 then
+          WriteBitsZero(ContextDataVal, ContextDataPos, ABitsPerChar, ZeroBits, Output, AGetChar);
         WriteBits(ContextDataVal, ContextDataPos, ABitsPerChar, Output, Ch, 16, AGetChar);
       end;
       Dec(ContextEnlargeIn);

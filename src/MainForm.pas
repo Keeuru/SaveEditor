@@ -342,10 +342,15 @@ begin
   begin
     FUpdating := True;
     try
-      memoJson.Lines.Text := FormatJson(View);
+      memoJson.Lines.BeginUpdate;
+      try
+        memoJson.Lines.Text := FormatJson(View);
+      finally
+        memoJson.Lines.EndUpdate;
+      end;
     finally
-      FUpdating := False;
       FJsonMemoDirty := False;
+      FUpdating := False;
     end;
   end;
 end;
@@ -492,6 +497,8 @@ begin
 
   if (ParentNode = nil) or (ParentNode = vstJson.RootNode) then
   begin
+    if cboView.ItemIndex > 0 then
+      Exit;
     FJsonRoot := ParseJsonText(JsonToCompact(ANewValue));
     SetNodeFields(Payload, JsonRootAncestor(FJsonRoot), Payload.NodeKey);
     RefreshViewCombo;
@@ -1149,7 +1156,13 @@ begin
     Exit;
   try
     FUpdating := True;
-    memoJson.Lines.Text := FormatJson(View);
+    memoJson.Lines.BeginUpdate;
+    try
+      memoJson.Lines.Text := FormatJson(View);
+    finally
+      memoJson.Lines.EndUpdate;
+    end;
+    FJsonMemoDirty := False;
     SetModified(True);
   finally
     FUpdating := False;
