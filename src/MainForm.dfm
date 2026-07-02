@@ -294,7 +294,6 @@ object frmMain: TfrmMain
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitLeft = 300
     object PanelTreeTop: TPanel
       Left = 0
       Top = 0
@@ -383,7 +382,6 @@ object frmMain: TfrmMain
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 647
       object lblPath: TLabel
         Left = 8
         Top = 8
@@ -401,31 +399,66 @@ object frmMain: TfrmMain
         OnClick = btnApplyClick
       end
     end
-    object memoValue: TMemo
+    object memoValue: TSynEdit
       Left = 0
       Top = 82
       Width = 300
       Height = 679
       Align = alClient
-      ScrollBars = ssBoth
+      CaseSensitive = True
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Consolas'
+      Font.Style = []
+      Font.Quality = fqClearTypeNatural
       TabOrder = 1
-      WordWrap = False
-      OnChange = memoValueChange
       OnExit = memoValueExit
       OnKeyDown = memoValueKeyDown
-      ExplicitWidth = 647
+      UseCodeFolding = False
+      Gutter.Font.Charset = DEFAULT_CHARSET
+      Gutter.Font.Color = clWindowText
+      Gutter.Font.Height = -11
+      Gutter.Font.Name = 'Consolas'
+      Gutter.Font.Style = []
+      Gutter.Font.Quality = fqClearTypeNatural
+      Gutter.Bands = <>
+      Highlighter = synJsonHL
+      ScrollbarAnnotations = <>
+      WantTabs = True
+      OnChange = memoValueChange
     end
   end
-  object memoJson: TMemo
+  object memoJson: TSynEdit
     Left = 300
     Top = 0
     Width = 344
     Height = 761
     Align = alClient
+    CaseSensitive = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Consolas'
+    Font.Style = []
+    Font.Quality = fqClearTypeNatural
     TabOrder = 5
-    WordWrap = False
+    UseCodeFolding = False
+    Gutter.Font.Charset = DEFAULT_CHARSET
+    Gutter.Font.Color = clWindowText
+    Gutter.Font.Height = -11
+    Gutter.Font.Name = 'Consolas'
+    Gutter.Font.Style = []
+    Gutter.Font.Quality = fqClearTypeNatural
+    Gutter.Bands = <>
+    Highlighter = synJsonHL
+    ScrollbarAnnotations = <>
+    WantTabs = True
     OnChange = memoJsonChange
-    ExplicitWidth = 300
+  end
+  object synJsonHL: TSynJSONSyn
+    Left = 40
+    Top = 48
   end
   object MainMenu: TMainMenu
     Left = 112

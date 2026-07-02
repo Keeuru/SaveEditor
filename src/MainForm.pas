@@ -7,7 +7,7 @@ uses
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Menus, Vcl.AppEvnts, XSuperObject, XSuperJSON, SaveCodec, SaveSlots,
-  Vcl.Buttons, FontAwesome;
+  Vcl.Buttons, FontAwesome, SynEdit, SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding;
 
 type
   TfrmMain = class(TForm)
@@ -27,10 +27,12 @@ type
     btnFindPrev: TButton;
     TreeJson: TTreeView;
     PanelEdit: TPanel;
+    PanelEditTop: TPanel;
     lblPath: TLabel;
-    memoValue: TMemo;
+    memoValue: TSynEdit;
     btnApply: TButton;
-    memoJson: TMemo;
+    memoJson: TSynEdit;
+    synJsonHL: TSynJSONSyn;
     mnuEdit: TMenuItem;
     mnuFind: TMenuItem;
     mnuFindNext: TMenuItem;
@@ -104,7 +106,6 @@ type
     function GetViewRoot: IJSONAncestor;
     procedure RebuildTree;
     procedure BuildTreeNode(ANode: TTreeNode; AValue: IJSONAncestor; const AName: string);
-    function SelectedJsonValue: IJSONAncestor;
     procedure ShowNodeValue(ANode: TTreeNode);
     procedure UpdateNodeCaption(ANode: TTreeNode; AValue: IJSONAncestor);
     function TreeNodePath(ANode: TTreeNode): string;
@@ -123,6 +124,7 @@ type
     procedure CheckFolderWatch;
     procedure OnApplicationActivated;
     procedure SetupSpeedButtons;
+    procedure SetupSynEditors;
     procedure UpdateFolderPanelVisibility;
   protected
     procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
@@ -156,6 +158,7 @@ begin
   JsonSaveDialog.DefaultExt := 'json';
   JsonOpenDialog.Filter := JsonSaveDialog.Filter;
   ClearDocument;
+  SetupSynEditors;
   SetupSpeedButtons;
   UpdateFolderPanelVisibility;
   if ParamCount >= 1 then
@@ -445,11 +448,6 @@ begin
   finally
     TreeJson.Items.EndUpdate;
   end;
-end;
-
-function TfrmMain.SelectedJsonValue: IJSONAncestor;
-begin
-  Result := NodeJson(TreeJson.Selected);
 end;
 
 procedure TfrmMain.ShowNodeValue(ANode: TTreeNode);
@@ -1235,6 +1233,26 @@ begin
   SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clGray);
   SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14, TColor($0000A0D0));
   UpdateFolderPanelVisibility;
+end;
+
+procedure TfrmMain.SetupSynEditors;
+begin
+  memoJson.Highlighter := synJsonHL;
+  memoValue.Highlighter := synJsonHL;
+  memoJson.Font.Name := 'Consolas';
+  memoJson.Font.Size := 10;
+  memoValue.Font.Name := 'Consolas';
+  memoValue.Font.Size := 10;
+  memoJson.Gutter.Visible := True;
+  memoValue.Gutter.Visible := True;
+  memoJson.Options := memoJson.Options + [eoAutoIndent, eoTabsToSpaces, eoSmartTabDelete];
+  memoValue.Options := memoValue.Options + [eoAutoIndent, eoTabsToSpaces, eoSmartTabDelete];
+  memoJson.WantTabs := True;
+  memoValue.WantTabs := True;
+  memoJson.WordWrap := False;
+  memoValue.WordWrap := False;
+  memoJson.ScrollBars := ssBoth;
+  memoValue.ScrollBars := ssBoth;
 end;
 
 procedure TfrmMain.UpdateFolderPanelVisibility;
