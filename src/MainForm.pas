@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Menus, Vcl.AppEvnts, Vcl.FileCtrl, System.IniFiles, XSuperObject,
+  Vcl.AppEvnts, Vcl.FileCtrl, System.IniFiles, XSuperObject,
   XSuperJSON, SaveCodec, Vcl.Buttons, FontAwesome, SynEdit,
   SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding,
   VirtualTrees, VirtualTrees.Types, VirtualTrees.Header,
@@ -28,7 +28,6 @@ type
   end;
 
   TfrmMain = class(TForm)
-    MainMenu: TMainMenu;
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
     JsonSaveDialog: TSaveDialog;
@@ -41,13 +40,6 @@ type
     btnApply: TButton;
     memoJson: TSynEdit;
     synJsonHL: TSynJSONSyn;
-    mnuEdit: TMenuItem;
-    mnuFind: TMenuItem;
-    mnuFindNext: TMenuItem;
-    mnuFindPrev: TMenuItem;
-    N2: TMenuItem;
-    mnuFormatJson: TMenuItem;
-    mnuReloadTree: TMenuItem;
     gpFolderPath: TGridPanel;
     edtFolderPath: TEdit;
     spbFolderSelect: TSpeedButton;
@@ -60,6 +52,8 @@ type
     spbSaveFileAs: TSpeedButton;
     spbExportJson: TSpeedButton;
     spbImportJson: TSpeedButton;
+    spbFormatJson: TSpeedButton;
+    spbReloadTree: TSpeedButton;
     spbOpenFile: TSpeedButton;
     spbExitApp: TSpeedButton;
     Splitter1: TSplitter;
@@ -68,6 +62,7 @@ type
     GridPanel2: TGridPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure AppActivate(Sender: TObject);
     procedure AppIdle(Sender: TObject; var Done: Boolean);
     procedure OpenFileClick(Sender: TObject);
@@ -87,12 +82,12 @@ type
     procedure memoValueExit(Sender: TObject);
     procedure memoValueKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure memoJsonChange(Sender: TObject);
-    procedure mnuFormatJsonClick(Sender: TObject);
-    procedure mnuReloadTreeClick(Sender: TObject);
+    procedure memoJsonKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure spbFormatJsonClick(Sender: TObject);
+    procedure spbReloadTreeClick(Sender: TObject);
     procedure btnFindNextClick(Sender: TObject);
     procedure btnFindPrevClick(Sender: TObject);
     procedure edtSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure mnuFindClick(Sender: TObject);
     procedure spbFolderSelectClick(Sender: TObject);
     procedure edtFolderPathKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure flbFilesListDblClick(Sender: TObject);
@@ -145,6 +140,8 @@ type
     procedure SetupSynEditors;
     procedure SetupVirtualTree;
     procedure UpdateFolderPanelVisibility;
+    procedure FindKeyClick;
+    procedure SaveFromShortcut;
   protected
     procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
   public
@@ -208,6 +205,7 @@ end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
+  KeyPreview := True;
   FDirChangeHandle := 0;
   FMemoNode := nil;
   FMemoDirty := False;
@@ -1054,11 +1052,65 @@ begin
   ApplyMemoIfDirty;
 end;
 
+procedure TfrmMain.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if (Key = Ord('F')) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    FindKeyClick;
+    Key := 0;
+    Exit;
+  end;
+  if (Key = Ord('S')) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    SaveFromShortcut;
+    Key := 0;
+    Exit;
+  end;
+  if Key = VK_F3 then
+  begin
+    if ssShift in Shift then
+      btnFindPrevClick(nil)
+    else
+      btnFindNextClick(nil);
+    Key := 0;
+  end;
+end;
+
+procedure TfrmMain.FindKeyClick;
+begin
+  edtSearch.SetFocus;
+  edtSearch.SelectAll;
+end;
+
+procedure TfrmMain.SaveFromShortcut;
+begin
+  if FJsonRoot = nil then
+    Exit;
+  if not ApplyMemoIfDirty then
+    Exit;
+  SaveFileClick(nil);
+end;
+
 procedure TfrmMain.memoValueKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
+  if (Key = Ord('S')) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    SaveFromShortcut;
+    Key := 0;
+    Exit;
+  end;
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     ApplyMemoIfDirty;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmMain.memoJsonKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if (Key = Ord('S')) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    SaveFromShortcut;
     Key := 0;
   end;
 end;
@@ -1071,7 +1123,7 @@ begin
   SetModified(True);
 end;
 
-procedure TfrmMain.mnuFormatJsonClick(Sender: TObject);
+procedure TfrmMain.spbFormatJsonClick(Sender: TObject);
 begin
   if FJsonRoot = nil then
     Exit;
@@ -1090,7 +1142,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.mnuReloadTreeClick(Sender: TObject);
+procedure TfrmMain.spbReloadTreeClick(Sender: TObject);
 begin
   if FJsonRoot = nil then
     Exit;
@@ -1142,12 +1194,6 @@ begin
     edtSearch.Clear;
     Key := 0;
   end;
-end;
-
-procedure TfrmMain.mnuFindClick(Sender: TObject);
-begin
-  edtSearch.SetFocus;
-  edtSearch.SelectAll;
 end;
 
 function TfrmMain.PickFolder(var ADirectory: string): Boolean;
@@ -1337,10 +1383,12 @@ begin
   if not RegisterFontAwesome then
     Exit;
   SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18, clBlack);//clNavy
-  SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18, clBlack);//clGreen
+  SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить (Ctrl+S)', 18, clBlack);//clGreen
   SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18, clBlack);//TColor($0080B000)
   SetupSpeedButtonIcon(spbExportJson, fa_download, 'Экспорт в JSON...', 18, clBlack);//clPurple
   SetupSpeedButtonIcon(spbImportJson, fa_upload, 'Импорт из JSON...', 18, clBlack);//clMaroon
+  SetupSpeedButtonIcon(spbFormatJson, fa_code, 'Форматировать JSON', 18, clBlack);
+  SetupSpeedButtonIcon(spbReloadTree, fa_refresh, 'Применить JSON к дереву', 18, clBlack);
   SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clBlack);//clGray
   SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14, TColor($0000A0D0));
   UpdateFolderPanelVisibility;

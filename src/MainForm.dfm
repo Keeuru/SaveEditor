@@ -10,10 +10,11 @@ object frmMain: TfrmMain
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  Menu = MainMenu
+  KeyPreview = True
   Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   TextHeight = 15
   object Splitter1: TSplitter
     Left = 847
@@ -78,10 +79,28 @@ object frmMain: TfrmMain
       end
       item
         Column = 0
-        Control = spbExitApp
+        Control = spbFormatJson
+        Row = 6
+      end
+      item
+        Column = 0
+        Control = spbReloadTree
         Row = 7
+      end
+      item
+        Column = 0
+        Control = spbExitApp
+        Row = 9
       end>
     RowCollection = <
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
+      item
+        SizeStyle = ssAbsolute
+        Value = 40.000000000000000000
+      end
       item
         SizeStyle = ssAbsolute
         Value = 40.000000000000000000
@@ -188,6 +207,28 @@ object frmMain: TfrmMain
       ShowHint = True
       OnClick = ImportJsonClick
       ExplicitTop = 440
+    end
+    object spbFormatJson: TSpeedButton
+      Left = 0
+      Top = 240
+      Width = 40
+      Height = 40
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = spbFormatJsonClick
+    end
+    object spbReloadTree: TSpeedButton
+      Left = 0
+      Top = 280
+      Width = 40
+      Height = 40
+      Align = alClient
+      Flat = True
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = spbReloadTreeClick
     end
     object spbExitApp: TSpeedButton
       Left = 0
@@ -309,6 +350,7 @@ object frmMain: TfrmMain
     ScrollbarAnnotations = <>
     WantTabs = True
     OnChange = memoJsonChange
+    OnKeyDown = memoJsonKeyDown
   end
   object Panel1: TPanel
     Left = 850
@@ -396,6 +438,9 @@ object frmMain: TfrmMain
         Margins.Top = 4
         Margins.Right = 0
         Align = alClient
+        Hint = 'Поиск ключа (Ctrl+F, F3 / Shift+F3)'
+        ParentShowHint = True
+        ShowHint = True
         TabOrder = 0
         OnChange = edtSearchChange
         OnKeyDown = edtSearchKeyDown
@@ -519,39 +564,6 @@ object frmMain: TfrmMain
   object synJsonHL: TSynJSONSyn
     Left = 112
     Top = 536
-  end
-  object MainMenu: TMainMenu
-    Left = 112
-    Top = 592
-    object mnuEdit: TMenuItem
-      Caption = 'Edit'
-      object mnuFind: TMenuItem
-        Caption = 'Find Key...'
-        ShortCut = 16454
-        OnClick = mnuFindClick
-      end
-      object mnuFindNext: TMenuItem
-        Caption = 'Next Match (F3)'
-        ShortCut = 114
-        OnClick = btnFindNextClick
-      end
-      object mnuFindPrev: TMenuItem
-        Caption = 'Previous Match (Shift+F3)'
-        ShortCut = 8238
-        OnClick = btnFindPrevClick
-      end
-      object N2: TMenuItem
-        Caption = '-'
-      end
-      object mnuFormatJson: TMenuItem
-        Caption = 'Format JSON'
-        OnClick = mnuFormatJsonClick
-      end
-      object mnuReloadTree: TMenuItem
-        Caption = 'Apply JSON to Tree'
-        OnClick = mnuReloadTreeClick
-      end
-    end
   end
   object OpenDialog: TOpenDialog
     Left = 112
