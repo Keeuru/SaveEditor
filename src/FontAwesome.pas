@@ -28,7 +28,7 @@ procedure SetSpeedButtonIconColor(AButton: TSpeedButton; AIconColor: TColor);
 implementation
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, Vcl.Forms;
+  Winapi.Windows, System.SysUtils, Vcl.Forms;
 
 var
   GFontLoaded: Boolean;
@@ -53,7 +53,6 @@ begin
     if FileExists(Path) and (AddFontResource(PChar(Path)) > 0) then
     begin
       GFontPath := Path;
-      SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
       GFontLoaded := True;
       Exit(True);
     end;
