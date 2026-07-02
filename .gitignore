@@ -12,3 +12,5 @@ Win32/Release/
 *.RES
 
 *.rsm
+
+exe/

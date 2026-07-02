@@ -70,7 +70,8 @@ function ParseJsonText(const AText: string): ISuperObject;
 begin
   if Trim(AText) = '' then
     raise ESaveCodecError.Create('Пустой JSON.');
-  Result := SO(AText);
+  // CheckDate=False: ISO-строки (в т.ч. SugarCube "(revive:date)" и ...Z) остаются строками.
+  Result := TSuperObject.Create(AText, False);
 end;
 
 function JsonRootAncestor(const Root: ISuperObject): IJSONAncestor;

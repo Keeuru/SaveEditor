@@ -376,7 +376,7 @@ begin
   ParentNode := ANode.Parent;
   if ParentNode = nil then
   begin
-    FJsonRoot := SO(JsonToCompact(ANewValue));
+    FJsonRoot := ParseJsonText(JsonToCompact(ANewValue));
     ANode.Data := Pointer(JsonRootAncestor(FJsonRoot));
     RefreshViewCombo;
     Exit(True);

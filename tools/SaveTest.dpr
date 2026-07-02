@@ -23,6 +23,8 @@ begin
     Text := LoadSaveFromFile(Fn, Json);
     WriteLn('Decompressed OK, length=', Length(Text));
     WriteLn(Copy(Text, 1, 120));
+    if Pos('.000Z', Text) > 0 then
+      WriteLn('Contains .000Z UTC marker: OK');
     Recompressed := SaveSaveToText(Json);
     WriteLn('Recompressed length=', Length(Recompressed));
     Json := nil;
