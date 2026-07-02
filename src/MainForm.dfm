@@ -132,7 +132,7 @@ object frmMain: TfrmMain
         SizeStyle = ssAbsolute
         Value = 40.000000000000000000
       end>
-    TabOrder = 0
+    TabOrder = 1
     object spbOpenFile: TSpeedButton
       Left = 0
       Top = 0
@@ -282,7 +282,7 @@ object frmMain: TfrmMain
       item
         Value = 100.000000000000000000
       end>
-    TabOrder = 1
+    TabOrder = 2
     Visible = False
     object edtFolderPath: TEdit
       AlignWithMargins = True
@@ -337,7 +337,7 @@ object frmMain: TfrmMain
     Font.Name = 'Consolas'
     Font.Style = []
     Font.Quality = fqClearTypeNatural
-    TabOrder = 3
+    TabOrder = 0
     OnKeyDown = memoJsonKeyDown
     UseCodeFolding = False
     Gutter.Font.Charset = DEFAULT_CHARSET
@@ -360,7 +360,7 @@ object frmMain: TfrmMain
     Align = alRight
     BevelOuter = bvNone
     Caption = 'pnlJsonTreeEdit'
-    TabOrder = 4
+    TabOrder = 3
     object splEditJSON: TSplitter
       Left = 0
       Top = 558
