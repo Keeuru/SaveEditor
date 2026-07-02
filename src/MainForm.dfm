@@ -240,7 +240,7 @@ object frmMain: TfrmMain
       item
         Column = 0
         ColumnSpan = 2
-        Control = lbFilesList
+        Control = flbFilesList
         Row = 1
       end>
     RowCollection = <
@@ -275,15 +275,16 @@ object frmMain: TfrmMain
       ShowHint = True
       OnClick = spbFolderSelectClick
     end
-    object lbFilesList: TListBox
+    object flbFilesList: TFileListBox
       Left = 0
       Top = 28
       Width = 260
       Height = 733
       Align = alClient
-      ItemHeight = 15
+      Mask = '*.save'
+      ShowGlyphs = True
       TabOrder = 1
-      OnDblClick = lbFilesListDblClick
+      OnDblClick = flbFilesListDblClick
     end
   end
   object PanelTree: TPanel

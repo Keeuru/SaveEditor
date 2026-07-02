@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Menus, Vcl.AppEvnts, XSuperObject, XSuperJSON, SaveCodec, SaveSlots,
+  Vcl.Menus, Vcl.AppEvnts, Vcl.FileCtrl, System.IniFiles, XSuperObject, XSuperJSON, SaveCodec, SaveSlots,
   Vcl.Buttons, FontAwesome, SynEdit, SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding,
   VirtualTrees, VirtualTrees.Types, VirtualTrees.Header, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL;
 
@@ -55,7 +55,7 @@ type
     gpFolderPath: TGridPanel;
     edtFolderPath: TEdit;
     spbFolderSelect: TSpeedButton;
-    lbFilesList: TListBox;
+    flbFilesList: TFileListBox;
     ApplicationEvents: TApplicationEvents;
     splEditJSON: TSplitter;
     gpMainButtons: TGridPanel;
@@ -100,7 +100,7 @@ type
     procedure mnuFindClick(Sender: TObject);
     procedure spbFolderSelectClick(Sender: TObject);
     procedure edtFolderPathKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure lbFilesListDblClick(Sender: TObject);
+    procedure flbFilesListDblClick(Sender: TObject);
     procedure edtFolderPathEnter(Sender: TObject);
     procedure OpenFolderClick(Sender: TObject);
   private
@@ -141,6 +141,9 @@ type
     procedure ApplyJsonFromText(const AJsonText: string);
     function PickFolder(var ADirectory: string): Boolean;
     procedure RefreshSaveFilesList(AShowErrors: Boolean = True);
+    procedure LoadSavedFolder;
+    procedure SaveFolderPath;
+    function SettingsIniPath: string;
     procedure StartFolderWatch;
     procedure StopFolderWatch;
     procedure CheckFolderWatch;
@@ -228,6 +231,7 @@ begin
   SetupSynEditors;
   SetupSpeedButtons;
   UpdateFolderPanelVisibility;
+  LoadSavedFolder;
   if ParamCount >= 1 then
     LoadDocument(ParamStr(1));
 end;
@@ -235,6 +239,7 @@ end;
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
   StopFolderWatch;
+  SaveFolderPath;
   ClearDocument;
 end;
 
@@ -1330,53 +1335,67 @@ begin
   end;
 end;
 
+function TfrmMain.SettingsIniPath: string;
+begin
+  Result := ChangeFileExt(Application.ExeName, '.ini');
+end;
+
+procedure TfrmMain.SaveFolderPath;
+var
+  Ini: TIniFile;
+  Folder: string;
+begin
+  Folder := Trim(edtFolderPath.Text);
+  Ini := TIniFile.Create(SettingsIniPath);
+  try
+    Ini.WriteString('Folders', 'Path', Folder);
+  finally
+    Ini.Free;
+  end;
+end;
+
+procedure TfrmMain.LoadSavedFolder;
+var
+  Ini: TIniFile;
+  Folder: string;
+begin
+  Ini := TIniFile.Create(SettingsIniPath);
+  try
+    Folder := Trim(Ini.ReadString('Folders', 'Path', ''));
+  finally
+    Ini.Free;
+  end;
+  if Folder = '' then
+    Exit;
+  edtFolderPath.Text := Folder;
+  RefreshSaveFilesList(False);
+end;
+
 procedure TfrmMain.RefreshSaveFilesList(AShowErrors: Boolean);
 var
   Folder: string;
-  Files: TArray<string>;
-  FileName: string;
-  Names: TStringList;
-  SelectedFile: string;
-  SelectedIndex: Integer;
 begin
-  SelectedFile := '';
-  if lbFilesList.ItemIndex >= 0 then
-    SelectedFile := lbFilesList.Items[lbFilesList.ItemIndex];
-
-  lbFilesList.Clear;
   Folder := Trim(edtFolderPath.Text);
   if Folder = '' then
   begin
+    flbFilesList.Directory := '';
     StopFolderWatch;
     Exit;
   end;
   if not TDirectory.Exists(Folder) then
   begin
+    flbFilesList.Directory := '';
     StopFolderWatch;
     if AShowErrors then
       MessageDlg('Папка не найдена: ' + Folder, mtError, [mbOK], 0);
     Exit;
   end;
 
-  Files := TDirectory.GetFiles(Folder, '*.*', TSearchOption.soTopDirectoryOnly);
-  Names := TStringList.Create;
-  try
-    Names.Sorted := True;
-    for FileName in Files do
-      if SameText(ExtractFileExt(FileName), '.save') then
-        Names.Add(ExtractFileName(FileName));
-    lbFilesList.Items.Assign(Names);
-  finally
-    Names.Free;
-  end;
-
-  if SelectedFile <> '' then
-  begin
-    SelectedIndex := lbFilesList.Items.IndexOf(SelectedFile);
-    if SelectedIndex >= 0 then
-      lbFilesList.ItemIndex := SelectedIndex;
-  end;
-
+  if not SameText(ExcludeTrailingPathDelimiter(flbFilesList.Directory), ExcludeTrailingPathDelimiter(Folder)) then
+    flbFilesList.Directory := Folder
+  else
+    flbFilesList.Update;
+  SaveFolderPath;
   StartFolderWatch;
 end;
 
@@ -1406,16 +1425,13 @@ begin
   end;
 end;
 
-procedure TfrmMain.lbFilesListDblClick(Sender: TObject);
-var
-  FilePath: string;
+procedure TfrmMain.flbFilesListDblClick(Sender: TObject);
 begin
-  if lbFilesList.ItemIndex < 0 then
+  if flbFilesList.ItemIndex < 0 then
     Exit;
   if not ConfirmSaveIfModified then
     Exit;
-  FilePath := IncludeTrailingPathDelimiter(Trim(edtFolderPath.Text)) + lbFilesList.Items[lbFilesList.ItemIndex];
-  LoadDocument(FilePath);
+  LoadDocument(flbFilesList.FileName);
 end;
 
 procedure TfrmMain.SetupSpeedButtons;
