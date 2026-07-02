@@ -7,7 +7,7 @@ uses
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Menus, Vcl.AppEvnts, Vcl.FileCtrl, System.IniFiles, XSuperObject,
-  XSuperJSON, SaveCodec, SaveSlots, Vcl.Buttons, FontAwesome, SynEdit,
+  XSuperJSON, SaveCodec, Vcl.Buttons, FontAwesome, SynEdit,
   SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding,
   VirtualTrees, VirtualTrees.Types, VirtualTrees.Header,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL;
@@ -34,8 +34,6 @@ type
     JsonSaveDialog: TSaveDialog;
     JsonOpenDialog: TOpenDialog;
     StatusBar: TStatusBar;
-    lblView: TLabel;
-    cboView: TComboBox;
     lblSearch: TLabel;
     edtSearch: TEdit;
     vstJson: TVirtualStringTree;
@@ -91,7 +89,6 @@ type
     procedure memoJsonChange(Sender: TObject);
     procedure mnuFormatJsonClick(Sender: TObject);
     procedure mnuReloadTreeClick(Sender: TObject);
-    procedure cboViewChange(Sender: TObject);
     procedure btnFindNextClick(Sender: TObject);
     procedure btnFindPrevClick(Sender: TObject);
     procedure edtSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -119,8 +116,6 @@ type
     procedure SaveDocument(const AFileName: string);
     function ConfirmSaveIfModified: Boolean;
     procedure SyncJsonMemo;
-    procedure RefreshViewCombo;
-    function GetViewRoot: IJSONAncestor;
     procedure RebuildTree;
     procedure BuildTreeNode(ANode: PVirtualNode; AValue: IJSONAncestor; const AKey: string);
     procedure SetNodeFields(APayload: TJsonNodePayload; AValue: IJSONAncestor; const AKey: string);
@@ -263,21 +258,14 @@ end;
 
 procedure TfrmMain.UpdateStatus;
 var
-  Msg, ViewName: string;
+  Msg: string;
 begin
   if FFileName <> '' then
     Msg := FFileName
   else
     Msg := 'Файл не открыт';
   if FJsonRoot <> nil then
-  begin
     Msg := Msg + '  |  JSON: ' + IntToStr(Length(memoJson.Text)) + ' симв.';
-    if cboView.ItemIndex >= 0 then
-    begin
-      ViewName := cboView.Items[cboView.ItemIndex];
-      Msg := Msg + '  |  вид: ' + ViewName;
-    end;
-  end;
   if FModified then
     Msg := Msg + '  |  изменён';
   StatusBar.SimpleText := Msg;
@@ -292,8 +280,6 @@ begin
   FJsonMemoDirty := False;
   FSearchText := '';
   vstJson.Clear;
-  cboView.Items.Clear;
-  cboView.Enabled := False;
   edtSearch.Clear;
   edtSearch.Enabled := False;
   memoValue.Clear;
@@ -302,42 +288,9 @@ begin
   SetModified(False);
 end;
 
-function TfrmMain.GetViewRoot: IJSONAncestor;
-begin
-  Result := nil;
-  if FJsonRoot = nil then
-    Exit;
-  if (cboView.ItemIndex < 0) or (cboView.ItemIndex = 0) then
-    Exit(JsonRootAncestor(FJsonRoot));
-  if cboView.Items.Objects[cboView.ItemIndex] <> nil then
-    Result := IJSONAncestor(Pointer(cboView.Items.Objects[cboView.ItemIndex]));
-end;
-
-procedure TfrmMain.RefreshViewCombo;
-begin
-  FUpdating := True;
-  try
-    cboView.Items.Clear;
-    if FJsonRoot = nil then
-    begin
-      cboView.Enabled := False;
-      Exit;
-    end;
-    FillSaveViewList(FJsonRoot, cboView.Items);
-    cboView.ItemIndex := 0;
-    cboView.Enabled := cboView.Items.Count > 1;
-    edtSearch.Enabled := True;
-  finally
-    FUpdating := False;
-  end;
-end;
-
 procedure TfrmMain.SyncJsonMemo;
-var
-  View: IJSONAncestor;
 begin
-  View := GetViewRoot;
-  if View = nil then
+  if FJsonRoot = nil then
     memoJson.Clear
   else
   begin
@@ -345,7 +298,7 @@ begin
     try
       memoJson.Lines.BeginUpdate;
       try
-        memoJson.Lines.Text := FormatJson(View);
+        memoJson.Lines.Text := FormatJson(JsonRootAncestor(FJsonRoot));
       finally
         memoJson.Lines.EndUpdate;
       end;
@@ -498,11 +451,8 @@ begin
 
   if (ParentNode = nil) or (ParentNode = vstJson.RootNode) then
   begin
-    if cboView.ItemIndex > 0 then
-      Exit;
     FJsonRoot := ParseJsonText(JsonToCompact(ANewValue));
     SetNodeFields(Payload, JsonRootAncestor(FJsonRoot), Payload.NodeKey);
-    RefreshViewCombo;
     Exit(True);
   end;
 
@@ -548,26 +498,19 @@ end;
 procedure TfrmMain.RebuildTree;
 var
   Root: PVirtualNode;
-  View: IJSONAncestor;
   RootPayload: TJsonNodePayload;
 begin
   FSearchText := Trim(edtSearch.Text);
   vstJson.BeginUpdate;
   try
     vstJson.Clear;
-    View := GetViewRoot;
-    if View <> nil then
+    if FJsonRoot <> nil then
     begin
       Root := vstJson.AddChild(nil);
-      BuildTreeNode(Root, View, '');
+      BuildTreeNode(Root, JsonRootAncestor(FJsonRoot), '');
       RootPayload := GetNodePayload(Root);
       if RootPayload <> nil then
-      begin
-        if cboView.ItemIndex = 0 then
-          RootPayload.Caption := 'save'
-        else
-          RootPayload.Caption := cboView.Text;
-      end;
+        RootPayload.Caption := 'save';
       vstJson.Expanded[Root] := True;
     end;
     ApplySearchFilter;
@@ -890,7 +833,7 @@ end;
 procedure TfrmMain.ApplyJsonFromText(const AJsonText: string);
 begin
   FJsonRoot := ParseJsonText(AJsonText);
-  RefreshViewCombo;
+  edtSearch.Enabled := True;
   SyncJsonMemo;
   RebuildTree;
   SetModified(True);
@@ -908,7 +851,7 @@ begin
     ClearDocument;
     FJsonRoot := Json;
     FFileName := AFileName;
-    RefreshViewCombo;
+    edtSearch.Enabled := True;
     SyncJsonMemo;
     RebuildTree;
     SetModified(False);
@@ -930,15 +873,9 @@ begin
   try
     if FJsonMemoDirty then
     begin
-      if cboView.ItemIndex > 0 then
-        MessageDlg('Отображается выбранный фрагмент. ' + 'Для сохранения всего .save выберите «Просмотр» на «Весь файл» или примените правки через дерево.', mtInformation, [mbOK], 0)
-      else
-      begin
-        FJsonRoot := ParseJsonText(memoJson.Text);
-        RefreshViewCombo;
-        RebuildTree;
-        FJsonMemoDirty := False;
-      end;
+      FJsonRoot := ParseJsonText(memoJson.Text);
+      RebuildTree;
+      FJsonMemoDirty := False;
     end;
     SaveSaveToFile(AFileName, FJsonRoot);
     FFileName := AFileName;
@@ -1007,13 +944,9 @@ end;
 
 procedure TfrmMain.ExportJsonClick(Sender: TObject);
 var
-  View: IJSONAncestor;
   BaseName, OutName: string;
 begin
   if FJsonRoot = nil then
-    Exit;
-  View := GetViewRoot;
-  if View = nil then
     Exit;
 
   BaseName := FFileName;
@@ -1021,10 +954,7 @@ begin
     BaseName := 'save'
   else
     BaseName := ChangeFileExt(BaseName, '');
-  if cboView.ItemIndex > 0 then
-    OutName := BaseName + '_' + StringReplace(cboView.Text, ' — ', '_', [rfReplaceAll]) + '.json'
-  else
-    OutName := BaseName + '.json';
+  OutName := BaseName + '.json';
   OutName := StringReplace(OutName, ':', '_', [rfReplaceAll]);
   OutName := StringReplace(OutName, '\', '_', [rfReplaceAll]);
   OutName := StringReplace(OutName, '/', '_', [rfReplaceAll]);
@@ -1033,7 +963,7 @@ begin
   if not JsonSaveDialog.Execute then
     Exit;
 
-  TFile.WriteAllText(JsonSaveDialog.FileName, FormatJson(View), TEncoding.UTF8);
+  TFile.WriteAllText(JsonSaveDialog.FileName, FormatJson(JsonRootAncestor(FJsonRoot)), TEncoding.UTF8);
   MessageDlg('Экспортировано: ' + JsonSaveDialog.FileName, mtInformation, [mbOK], 0);
 end;
 
@@ -1142,17 +1072,14 @@ begin
 end;
 
 procedure TfrmMain.mnuFormatJsonClick(Sender: TObject);
-var
-  View: IJSONAncestor;
 begin
-  View := GetViewRoot;
-  if View = nil then
+  if FJsonRoot = nil then
     Exit;
   try
     FUpdating := True;
     memoJson.Lines.BeginUpdate;
     try
-      memoJson.Lines.Text := FormatJson(View);
+      memoJson.Lines.Text := FormatJson(JsonRootAncestor(FJsonRoot));
     finally
       memoJson.Lines.EndUpdate;
     end;
@@ -1168,31 +1095,14 @@ begin
   if FJsonRoot = nil then
     Exit;
   try
-    if cboView.ItemIndex = 0 then
-    begin
-      FJsonRoot := ParseJsonText(memoJson.Text);
-      RefreshViewCombo;
-      RebuildTree;
-      SetModified(True);
-      FJsonMemoDirty := False;
-    end
-    else
-      MessageDlg('Применение JSON из фрагмента к полному файлу пока не поддерживается. ' + 'Выберите «Весь файл» или правьте через дерево.', mtInformation, [mbOK], 0);
+    FJsonRoot := ParseJsonText(memoJson.Text);
+    RebuildTree;
+    SetModified(True);
+    FJsonMemoDirty := False;
   except
     on E: Exception do
       MessageDlg('JSON: ' + E.Message, mtError, [mbOK], 0);
   end;
-end;
-
-procedure TfrmMain.cboViewChange(Sender: TObject);
-begin
-  if FUpdating or (FJsonRoot = nil) then
-    Exit;
-  if not ApplyMemoIfDirty then
-    Exit;
-  RebuildTree;
-  SyncJsonMemo;
-  UpdateStatus;
 end;
 
 procedure TfrmMain.btnFindNextClick(Sender: TObject);

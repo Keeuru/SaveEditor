@@ -351,35 +351,21 @@ object frmMain: TfrmMain
       ControlCollection = <
         item
           Column = 0
-          Control = lblView
-          Row = 0
-        end
-        item
-          Column = 1
-          Control = cboView
-          Row = 0
-        end
-        item
-          Column = 0
           Control = lblSearch
-          Row = 1
+          Row = 0
         end
         item
           Column = 1
           Control = edtSearch
-          Row = 1
+          Row = 0
         end
         item
           Column = 0
           ColumnSpan = 2
           Control = vstJson
-          Row = 2
+          Row = 1
         end>
       RowCollection = <
-        item
-          SizeStyle = ssAbsolute
-          Value = 30.000000000000000000
-        end
         item
           SizeStyle = ssAbsolute
           Value = 30.000000000000000000
@@ -388,19 +374,19 @@ object frmMain: TfrmMain
           Value = 100.000000000000000000
         end>
       TabOrder = 0
-      object lblView: TLabel
+      object lblSearch: TLabel
         Left = 0
         Top = 0
-        Width = 25
+        Width = 56
         Height = 30
         Align = alLeft
-        Caption = 'View'
+        Caption = 'Search key'
         Layout = tlCenter
         ExplicitLeft = 8
         ExplicitTop = 8
         ExplicitHeight = 15
       end
-      object cboView: TComboBox
+      object edtSearch: TEdit
         AlignWithMargins = True
         Left = 60
         Top = 4
@@ -410,41 +396,15 @@ object frmMain: TfrmMain
         Margins.Top = 4
         Margins.Right = 0
         Align = alClient
-        Style = csDropDownList
         TabOrder = 0
-        OnChange = cboViewChange
-      end
-      object lblSearch: TLabel
-        Left = 0
-        Top = 30
-        Width = 56
-        Height = 30
-        Align = alLeft
-        Caption = 'Search key'
-        Layout = tlCenter
-        ExplicitLeft = 8
-        ExplicitTop = 56
-        ExplicitHeight = 15
-      end
-      object edtSearch: TEdit
-        AlignWithMargins = True
-        Left = 60
-        Top = 34
-        Width = 340
-        Height = 23
-        Margins.Left = 0
-        Margins.Top = 4
-        Margins.Right = 0
-        Align = alClient
-        TabOrder = 1
         OnChange = edtSearchChange
         OnKeyDown = edtSearchKeyDown
       end
       object vstJson: TVirtualStringTree
         Left = 0
-        Top = 60
+        Top = 30
         Width = 400
-        Height = 498
+        Height = 528
         Align = alClient
         Anchors = []
         DefaultNodeHeight = 19

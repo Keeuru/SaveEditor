@@ -144,7 +144,6 @@
         <DCCReference Include="src\LZString.pas"/>
         <DCCReference Include="src\FontAwesome.pas"/>
         <DCCReference Include="src\SaveCodec.pas"/>
-        <DCCReference Include="src\SaveSlots.pas"/>
         <DCCReference Include="src\XSuperJSON.pas"/>
         <DCCReference Include="src\XSuperObject.pas"/>
         <BuildConfiguration Include="Base">
