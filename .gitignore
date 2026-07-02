@@ -12,5 +12,4 @@ Win32/Release/
 *.RES
 
 *.rsm
-
-exe/
+exe/SaveEditor.ini

@@ -6,9 +6,11 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Menus, Vcl.AppEvnts, Vcl.FileCtrl, System.IniFiles, XSuperObject, XSuperJSON, SaveCodec, SaveSlots,
-  Vcl.Buttons, FontAwesome, SynEdit, SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding,
-  VirtualTrees, VirtualTrees.Types, VirtualTrees.Header, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL;
+  Vcl.Menus, Vcl.AppEvnts, Vcl.FileCtrl, System.IniFiles, XSuperObject,
+  XSuperJSON, SaveCodec, SaveSlots, Vcl.Buttons, FontAwesome, SynEdit,
+  SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding,
+  VirtualTrees, VirtualTrees.Types, VirtualTrees.Header,
+  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL;
 
 type
   TJsonNodePayload = class
@@ -20,6 +22,7 @@ type
   end;
 
   PJsonNodeRef = ^TJsonNodeRef;
+
   TJsonNodeRef = record
     Payload: TJsonNodePayload;
   end;
@@ -75,13 +78,10 @@ type
     procedure ExportJsonClick(Sender: TObject);
     procedure ImportJsonClick(Sender: TObject);
     procedure ExitClick(Sender: TObject);
-    procedure vstJsonFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode; OldColumn,
-      NewColumn: TColumnIndex; var Allowed: Boolean);
+    procedure vstJsonFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode; OldColumn, NewColumn: TColumnIndex; var Allowed: Boolean);
     procedure vstJsonFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-    procedure vstJsonGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-      TextType: TVSTTextType; var CellText: string);
-    procedure vstJsonInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
-      var InitialStates: TVirtualNodeInitStates);
+    procedure vstJsonGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure vstJsonInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstJsonFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure edtSearchChange(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
@@ -190,8 +190,7 @@ begin
     Result := Ref.Payload;
 end;
 
-procedure TfrmMain.vstJsonInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
-  var InitialStates: TVirtualNodeInitStates);
+procedure TfrmMain.vstJsonInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
   Ref: PJsonNodeRef;
 begin
@@ -757,9 +756,7 @@ begin
   Payload := GetNodePayload(ANode);
   if Payload = nil then
     Exit;
-  Result := (Pos(UpperCase(ASearch), UpperCase(Payload.NodeKey)) > 0)
-    or (Pos(UpperCase(ASearch), UpperCase(Payload.Caption)) > 0)
-    or (Pos(UpperCase(ASearch), UpperCase(Payload.ValuePreview)) > 0);
+  Result := (Pos(UpperCase(ASearch), UpperCase(Payload.NodeKey)) > 0) or (Pos(UpperCase(ASearch), UpperCase(Payload.Caption)) > 0) or (Pos(UpperCase(ASearch), UpperCase(Payload.ValuePreview)) > 0);
 end;
 
 procedure TfrmMain.UpdateSearchFilterRecursive(ANode: PVirtualNode);
@@ -1066,8 +1063,7 @@ begin
     Close;
 end;
 
-procedure TfrmMain.vstJsonFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode;
-  OldColumn, NewColumn: TColumnIndex; var Allowed: Boolean);
+procedure TfrmMain.vstJsonFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode; OldColumn, NewColumn: TColumnIndex; var Allowed: Boolean);
 begin
   Allowed := True;
   if FUpdating then
@@ -1081,16 +1077,14 @@ begin
   end;
 end;
 
-procedure TfrmMain.vstJsonFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
-  Column: TColumnIndex);
+procedure TfrmMain.vstJsonFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 begin
   if FUpdating then
     Exit;
   ShowNodeValue(Node);
 end;
 
-procedure TfrmMain.vstJsonGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: string);
+procedure TfrmMain.vstJsonGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 var
   Payload: TJsonNodePayload;
 begin
@@ -1183,8 +1177,7 @@ begin
       FJsonMemoDirty := False;
     end
     else
-      MessageDlg('Применение JSON из фрагмента к полному файлу пока не поддерживается. ' +
-        'Выберите «Весь файл» или правьте через дерево.', mtInformation, [mbOK], 0);
+      MessageDlg('Применение JSON из фрагмента к полному файлу пока не поддерживается. ' + 'Выберите «Весь файл» или правьте через дерево.', mtInformation, [mbOK], 0);
   except
     on E: Exception do
       MessageDlg('JSON: ' + E.Message, mtError, [mbOK], 0);
@@ -1433,7 +1426,6 @@ procedure TfrmMain.SetupSpeedButtons;
 begin
   if not RegisterFontAwesome then
     Exit;
-
   SetupSpeedButtonIcon(spbOpenFile, fa_file_o, 'Открыть файл...', 18, clBlack);//clNavy
   SetupSpeedButtonIcon(spbSaveFile, fa_floppy_o, 'Сохранить', 18, clBlack);//clGreen
   SetupSpeedButtonIcon(spbSaveFileAs, fa_files_o, 'Сохранить как...', 18, clBlack);//TColor($0080B000)
@@ -1445,8 +1437,6 @@ begin
 end;
 
 procedure TfrmMain.SetupVirtualTree;
-var
-  Col: TVirtualTreeColumn;
 begin
   vstJson.NodeDataSize := SizeOf(TJsonNodeRef);
   vstJson.Header.Options := vstJson.Header.Options + [hoVisible, hoAutoResize, hoColumnResize];
