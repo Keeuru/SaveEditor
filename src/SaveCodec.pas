@@ -153,9 +153,23 @@ begin
   Result := (Root as TSuperObject).Self;
 end;
 
+function ValidateSugarCubeSave(AJson: ISuperObject): string;
+begin
+  Result := '';
+  if AJson = nil then
+    Exit('Пустой JSON.');
+  if not AJson.Contains('id') then
+    Exit('В сохранении отсутствует поле "id".');
+  if not AJson.Contains('state') then
+    Exit('В сохранении отсутствует поле "state".');
+  if not AJson.O['state'].Contains('delta') then
+    Exit('В state отсутствует "delta" — файл не загрузится в SugarCube.');
+end;
+
 function LoadSaveFromText(const ACompressed: string; out AJson: ISuperObject): string;
 var
   JsonText: string;
+  Msg: string;
 begin
   AJson := nil;
   JsonText := LZDecompressFromBase64(TrimSaveText(ACompressed));
@@ -163,6 +177,9 @@ begin
     raise ESaveCodecError.Create('Не удалось распаковать файл (формат LZ-String / Base64).');
   Result := JsonText;
   AJson := ParseJsonText(JsonText);
+  Msg := ValidateSugarCubeSave(AJson);
+  if Msg <> '' then
+    raise ESaveCodecError.Create(Msg);
 end;
 
 function LoadSaveFromFile(const AFileName: string; out AJson: ISuperObject): string;
@@ -181,6 +198,8 @@ begin
     raise ESaveCodecError.Create('Нет данных для сохранения.');
   JsonText := JsonToCompact(JsonRootAncestor(AJson));
   Result := LZCompressToBase64(JsonText);
+  if LZDecompressFromBase64(Result) <> JsonText then
+    raise ESaveCodecError.Create('Ошибка сжатия: проверка LZ-String не прошла.');
 end;
 
 procedure SaveSaveToFile(const AFileName: string; AJson: ISuperObject);

@@ -7,9 +7,23 @@ uses
   System.IOUtils, System.Generics.Collections, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Menus, Vcl.AppEvnts, XSuperObject, XSuperJSON, SaveCodec, SaveSlots,
-  Vcl.Buttons, FontAwesome, SynEdit, SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding;
+  Vcl.Buttons, FontAwesome, SynEdit, SynEditTypes, SynHighlighterJSON, SynEditHighlighter, SynEditCodeFolding,
+  VirtualTrees, VirtualTrees.Types, VirtualTrees.Header, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL;
 
 type
+  TJsonNodePayload = class
+  public
+    JsonValue: IJSONAncestor;
+    NodeKey: string;
+    Caption: string;
+    ValuePreview: string;
+  end;
+
+  PJsonNodeRef = ^TJsonNodeRef;
+  TJsonNodeRef = record
+    Payload: TJsonNodePayload;
+  end;
+
   TfrmMain = class(TForm)
     MainMenu: TMainMenu;
     OpenDialog: TOpenDialog;
@@ -23,9 +37,7 @@ type
     cboView: TComboBox;
     lblSearch: TLabel;
     edtSearch: TEdit;
-    btnFindNext: TButton;
-    btnFindPrev: TButton;
-    TreeJson: TTreeView;
+    vstJson: TVirtualStringTree;
     PanelEdit: TPanel;
     PanelEditTop: TPanel;
     lblPath: TLabel;
@@ -65,7 +77,15 @@ type
     procedure ExportJsonClick(Sender: TObject);
     procedure ImportJsonClick(Sender: TObject);
     procedure ExitClick(Sender: TObject);
-    procedure TreeJsonChange(Sender: TObject; Node: TTreeNode);
+    procedure vstJsonFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode; OldColumn,
+      NewColumn: TColumnIndex; var Allowed: Boolean);
+    procedure vstJsonFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure vstJsonGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
+      TextType: TVSTTextType; var CellText: string);
+    procedure vstJsonInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
+      var InitialStates: TVirtualNodeInitStates);
+    procedure vstJsonFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure edtSearchChange(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
     procedure memoValueChange(Sender: TObject);
     procedure memoValueExit(Sender: TObject);
@@ -85,13 +105,12 @@ type
     procedure OpenFolderClick(Sender: TObject);
   private
     FJsonRoot: ISuperObject;
-    FNodeKeys: TDictionary<TTreeNode, string>;
     FFileName: string;
     FModified: Boolean;
     FUpdating: Boolean;
-    FLastSearchNode: TTreeNode;
     FDirChangeHandle: THandle;
-    FMemoNode: TTreeNode;
+    FSearchText: string;
+    FMemoNode: PVirtualNode;
     FMemoDirty: Boolean;
     FJsonMemoDirty: Boolean;
     procedure SetModified(AValue: Boolean);
@@ -105,17 +124,20 @@ type
     procedure RefreshViewCombo;
     function GetViewRoot: IJSONAncestor;
     procedure RebuildTree;
-    procedure BuildTreeNode(ANode: TTreeNode; AValue: IJSONAncestor; const AName: string);
-    procedure ShowNodeValue(ANode: TTreeNode);
-    procedure UpdateNodeCaption(ANode: TTreeNode; AValue: IJSONAncestor);
-    function TreeNodePath(ANode: TTreeNode): string;
-    function ReplaceNodeJsonValue(ANode: TTreeNode; ANewValue: IJSONAncestor): Boolean;
-    function ApplyValueFromMemo(AValue: IJSONAncestor; ANode: TTreeNode): Boolean;
+    procedure BuildTreeNode(ANode: PVirtualNode; AValue: IJSONAncestor; const AKey: string);
+    procedure SetNodeFields(APayload: TJsonNodePayload; AValue: IJSONAncestor; const AKey: string);
+    function GetNodePayload(ANode: PVirtualNode): TJsonNodePayload;
+    procedure ShowNodeValue(ANode: PVirtualNode);
+    procedure UpdateNodeCaption(ANode: PVirtualNode; AValue: IJSONAncestor);
+    function TreeNodePath(ANode: PVirtualNode): string;
+    function ReplaceNodeJsonValue(ANode: PVirtualNode; ANewValue: IJSONAncestor): Boolean;
+    function ApplyValueFromMemo(AValue: IJSONAncestor; ANode: PVirtualNode): Boolean;
     function ApplyMemoIfDirty: Boolean;
-    function NodeMatchesSearch(ANode: TTreeNode; const ASearch: string): Boolean;
-    procedure CollectNodes(ANode: TTreeNode; AList: TList<TTreeNode>);
-    function FindSearchNode(AForward: Boolean): TTreeNode;
-    procedure FocusSearchNode(ANode: TTreeNode);
+    function NodeMatchesSearch(ANode: PVirtualNode; const ASearch: string): Boolean;
+    procedure ApplySearchFilter;
+    procedure UpdateSearchFilterRecursive(ANode: PVirtualNode);
+    function FindSearchNode(AForward: Boolean): PVirtualNode;
+    procedure FocusSearchNode(ANode: PVirtualNode);
     procedure ApplyJsonFromText(const AJsonText: string);
     function PickFolder(var ADirectory: string): Boolean;
     procedure RefreshSaveFilesList(AShowErrors: Boolean = True);
@@ -125,6 +147,7 @@ type
     procedure OnApplicationActivated;
     procedure SetupSpeedButtons;
     procedure SetupSynEditors;
+    procedure SetupVirtualTree;
     procedure UpdateFolderPanelVisibility;
   protected
     procedure WMActivateApp(var Message: TWMActivateApp); message WM_ACTIVATEAPP;
@@ -138,11 +161,54 @@ implementation
 
 {$R *.dfm}
 
-function NodeJson(ANode: TTreeNode): IJSONAncestor;
+function NodeJson(AVst: TVirtualStringTree; ANode: PVirtualNode): IJSONAncestor;
+var
+  Ref: PJsonNodeRef;
 begin
   Result := nil;
-  if (ANode <> nil) and (ANode.Data <> nil) then
-    Result := IJSONAncestor(ANode.Data);
+  if (ANode = nil) or (ANode = AVst.RootNode) or (AVst.NodeDataSize = 0) then
+    Exit;
+  if not (vsInitialized in ANode.States) then
+    AVst.ValidateNode(ANode, False);
+  Ref := AVst.GetNodeData(ANode);
+  if (Ref <> nil) and (Ref.Payload <> nil) then
+    Result := Ref.Payload.JsonValue;
+end;
+
+function TfrmMain.GetNodePayload(ANode: PVirtualNode): TJsonNodePayload;
+var
+  Ref: PJsonNodeRef;
+begin
+  Result := nil;
+  if (ANode = nil) or (ANode = vstJson.RootNode) or (vstJson.NodeDataSize = 0) then
+    Exit;
+  if not (vsInitialized in ANode.States) then
+    vstJson.ValidateNode(ANode, False);
+  Ref := vstJson.GetNodeData(ANode);
+  if (Ref <> nil) then
+    Result := Ref.Payload;
+end;
+
+procedure TfrmMain.vstJsonInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
+  var InitialStates: TVirtualNodeInitStates);
+var
+  Ref: PJsonNodeRef;
+begin
+  Ref := Sender.GetNodeData(Node);
+  if Ref.Payload = nil then
+    Ref.Payload := TJsonNodePayload.Create;
+end;
+
+procedure TfrmMain.vstJsonFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+var
+  Ref: PJsonNodeRef;
+begin
+  Ref := Sender.GetNodeData(Node);
+  if (Ref <> nil) and (Ref.Payload <> nil) then
+  begin
+    Ref.Payload.Free;
+    Ref.Payload := nil;
+  end;
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
@@ -151,12 +217,13 @@ begin
   FMemoNode := nil;
   FMemoDirty := False;
   FJsonMemoDirty := False;
-  FNodeKeys := TDictionary<TTreeNode, string>.Create;
+  FSearchText := '';
   OpenDialog.Filter := 'Файлы сохранения (*.save)|*.save|Все файлы (*.*)|*.*';
   SaveDialog.Filter := OpenDialog.Filter;
   JsonSaveDialog.Filter := 'JSON (*.json)|*.json|Все файлы (*.*)|*.*';
   JsonSaveDialog.DefaultExt := 'json';
   JsonOpenDialog.Filter := JsonSaveDialog.Filter;
+  SetupVirtualTree;
   ClearDocument;
   SetupSynEditors;
   SetupSpeedButtons;
@@ -169,7 +236,6 @@ procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
   StopFolderWatch;
   ClearDocument;
-  FNodeKeys.Free;
 end;
 
 procedure TfrmMain.SetModified(AValue: Boolean);
@@ -219,18 +285,15 @@ procedure TfrmMain.ClearDocument;
 begin
   FJsonRoot := nil;
   FFileName := '';
-  FLastSearchNode := nil;
   FMemoNode := nil;
   FMemoDirty := False;
   FJsonMemoDirty := False;
-  TreeJson.Items.Clear;
-  FNodeKeys.Clear;
+  FSearchText := '';
+  vstJson.Clear;
   cboView.Items.Clear;
   cboView.Enabled := False;
   edtSearch.Clear;
   edtSearch.Enabled := False;
-  btnFindNext.Enabled := False;
-  btnFindPrev.Enabled := False;
   lblPath.Caption := '';
   memoValue.Clear;
   memoJson.Clear;
@@ -263,8 +326,6 @@ begin
     cboView.ItemIndex := 0;
     cboView.Enabled := cboView.Items.Count > 1;
     edtSearch.Enabled := True;
-    btnFindNext.Enabled := True;
-    btnFindPrev.Enabled := True;
   finally
     FUpdating := False;
   end;
@@ -281,47 +342,121 @@ begin
   begin
     FUpdating := True;
     try
-      memoJson.Lines.Text := FormatJson(View);
+      memoJson.Lines.BeginUpdate;
+      try
+        memoJson.Lines.Text := FormatJson(View);
+      finally
+        memoJson.Lines.EndUpdate;
+      end;
     finally
-      FUpdating := False;
       FJsonMemoDirty := False;
+      FUpdating := False;
     end;
   end;
 end;
 
-procedure TfrmMain.BuildTreeNode(ANode: TTreeNode; AValue: IJSONAncestor; const AName: string);
+procedure TfrmMain.SetNodeFields(APayload: TJsonNodePayload; AValue: IJSONAncestor; const AKey: string);
+var
+  ValueCast: ICast;
+  LabelText: string;
+begin
+  if APayload = nil then
+    Exit;
+  APayload.JsonValue := AValue;
+  APayload.NodeKey := AKey;
+  APayload.ValuePreview := '';
+  if AKey <> '' then
+    LabelText := AKey + ': '
+  else
+    LabelText := '';
+
+  if AValue = nil then
+  begin
+    APayload.Caption := LabelText;
+    Exit;
+  end;
+
+  ValueCast := TCast.Create(AValue);
+  case ValueCast.DataType of
+    dtObject:
+      begin
+        if AKey = '' then
+          APayload.Caption := 'Object {' + IntToStr(ValueCast.AsObject.Count) + '}'
+        else
+          APayload.Caption := LabelText + '{' + IntToStr(ValueCast.AsObject.Count) + '}';
+      end;
+    dtArray:
+      begin
+        if AKey = '' then
+          APayload.Caption := 'Array [' + IntToStr(ValueCast.AsArray.Length) + ']'
+        else
+          APayload.Caption := LabelText + '[' + IntToStr(ValueCast.AsArray.Length) + ']';
+      end;
+    dtString:
+      begin
+        APayload.ValuePreview := '"' + ValueCast.AsString + '"';
+        APayload.Caption := LabelText + APayload.ValuePreview;
+      end;
+    dtInteger:
+      begin
+        APayload.ValuePreview := IntToStr(ValueCast.AsInteger);
+        APayload.Caption := LabelText + APayload.ValuePreview;
+      end;
+    dtFloat:
+      begin
+        APayload.ValuePreview := FloatToStr(ValueCast.AsFloat);
+        APayload.Caption := LabelText + APayload.ValuePreview;
+      end;
+    dtBoolean:
+      if ValueCast.AsBoolean then
+      begin
+        APayload.ValuePreview := 'true';
+        APayload.Caption := LabelText + 'true';
+      end
+      else
+      begin
+        APayload.ValuePreview := 'false';
+        APayload.Caption := LabelText + 'false';
+      end;
+    dtNull:
+      begin
+        APayload.ValuePreview := 'null';
+        APayload.Caption := LabelText + 'null';
+      end;
+  else
+    begin
+      APayload.ValuePreview := JsonToCompact(AValue);
+      APayload.Caption := LabelText + APayload.ValuePreview;
+    end;
+  end;
+end;
+
+procedure TfrmMain.BuildTreeNode(ANode: PVirtualNode; AValue: IJSONAncestor; const AKey: string);
 var
   I: Integer;
-  Child: TTreeNode;
+  Child: PVirtualNode;
   Obj: ISuperObject;
   Arr: ISuperArray;
-  LabelText: string;
   ValueCast: ICast;
   Key: string;
+  Payload: TJsonNodePayload;
 begin
   if AValue = nil then
     Exit;
 
-  if AName <> '' then
-    LabelText := AName + ': '
-  else
-    LabelText := '';
+  Payload := GetNodePayload(ANode);
+  SetNodeFields(Payload, AValue, AKey);
 
   ValueCast := TCast.Create(AValue);
   case ValueCast.DataType of
     dtObject:
       begin
         Obj := ValueCast.AsObject;
-        if AName = '' then
-          ANode.Text := 'Object {' + IntToStr(Obj.Count) + '}'
-        else
-          ANode.Text := LabelText + '{' + IntToStr(Obj.Count) + '}';
         Obj.First;
         while not Obj.EoF do
         begin
           Key := Obj.CurrentKey;
-          Child := TreeJson.Items.AddChild(ANode, Key);
-          FNodeKeys.Add(Child, Key);
+          Child := vstJson.AddChild(ANode);
           BuildTreeNode(Child, Obj.CurrentValue, Key);
           Obj.Next;
         end;
@@ -329,41 +464,19 @@ begin
     dtArray:
       begin
         Arr := ValueCast.AsArray;
-        if AName = '' then
-          ANode.Text := 'Array [' + IntToStr(Arr.Length) + ']'
-        else
-          ANode.Text := LabelText + '[' + IntToStr(Arr.Length) + ']';
         for I := 0 to Arr.Length - 1 do
         begin
-          Child := TreeJson.Items.AddChild(ANode, '[' + IntToStr(I) + ']');
-          FNodeKeys.Add(Child, IntToStr(I));
-          BuildTreeNode(Child, Arr.Ancestor[I], '[' + IntToStr(I) + ']');
+          Key := IntToStr(I);
+          Child := vstJson.AddChild(ANode);
+          BuildTreeNode(Child, Arr.Ancestor[I], Key);
         end;
       end;
-    dtString:
-      ANode.Text := LabelText + '"' + ValueCast.AsString + '"';
-    dtInteger:
-      ANode.Text := LabelText + IntToStr(ValueCast.AsInteger);
-    dtFloat:
-      ANode.Text := LabelText + FloatToStr(ValueCast.AsFloat);
-    dtBoolean:
-      if ValueCast.AsBoolean then
-        ANode.Text := LabelText + 'true'
-      else
-        ANode.Text := LabelText + 'false';
-    dtNull:
-      ANode.Text := LabelText + 'null';
-  else
-    ANode.Text := LabelText + JsonToCompact(AValue);
   end;
-
-  if ANode.Data = nil then
-    ANode.Data := Pointer(AValue);
 end;
 
-function TfrmMain.ReplaceNodeJsonValue(ANode: TTreeNode; ANewValue: IJSONAncestor): Boolean;
+function TfrmMain.ReplaceNodeJsonValue(ANode: PVirtualNode; ANewValue: IJSONAncestor): Boolean;
 var
-  ParentNode: TTreeNode;
+  ParentNode: PVirtualNode;
   ParentVal: IJSONAncestor;
   ParentCast: ICast;
   Obj: ISuperObject;
@@ -371,40 +484,44 @@ var
   Key: string;
   Idx, I: Integer;
   Snapshot: TList<IJSONAncestor>;
+  Payload: TJsonNodePayload;
 begin
   Result := False;
   if (ANode = nil) or (ANewValue = nil) then
     Exit;
 
   ParentNode := ANode.Parent;
-  if ParentNode = nil then
+  Payload := GetNodePayload(ANode);
+  if Payload = nil then
+    Exit;
+
+  if (ParentNode = nil) or (ParentNode = vstJson.RootNode) then
   begin
+    if cboView.ItemIndex > 0 then
+      Exit;
     FJsonRoot := ParseJsonText(JsonToCompact(ANewValue));
-    ANode.Data := Pointer(JsonRootAncestor(FJsonRoot));
+    SetNodeFields(Payload, JsonRootAncestor(FJsonRoot), Payload.NodeKey);
     RefreshViewCombo;
     Exit(True);
   end;
 
-  ParentVal := NodeJson(ParentNode);
+  ParentVal := NodeJson(vstJson, ParentNode);
   if ParentVal = nil then
     Exit;
+
+  Key := Payload.NodeKey;
 
   ParentCast := TCast.Create(ParentVal);
   if ParentCast.DataType = dtObject then
   begin
     Obj := ParentCast.AsObject;
-    if not FNodeKeys.TryGetValue(ANode, Key) then
-      Exit;
     Obj.Remove(Key);
     Obj.Add(Key, ANewValue);
-    ANode.Data := Pointer(ANewValue);
     Result := True;
   end
   else if ParentCast.DataType = dtArray then
   begin
     Arr := ParentCast.AsArray;
-    if not FNodeKeys.TryGetValue(ANode, Key) then
-      Exit;
     if not TryStrToInt(Key, Idx) then
       Exit;
     if (Idx < 0) or (Idx >= Arr.Length) then
@@ -420,37 +537,45 @@ begin
     finally
       Snapshot.Free;
     end;
-    ANode.Data := Pointer(ANewValue);
     Result := True;
   end;
+
+  if Result then
+    SetNodeFields(Payload, ANewValue, Key);
 end;
 
 procedure TfrmMain.RebuildTree;
 var
-  Root: TTreeNode;
+  Root: PVirtualNode;
   View: IJSONAncestor;
+  RootPayload: TJsonNodePayload;
 begin
-  FLastSearchNode := nil;
-  TreeJson.Items.BeginUpdate;
+  FSearchText := Trim(edtSearch.Text);
+  vstJson.BeginUpdate;
   try
-    TreeJson.Items.Clear;
-    FNodeKeys.Clear;
+    vstJson.Clear;
     View := GetViewRoot;
     if View <> nil then
     begin
-      if cboView.ItemIndex = 0 then
-        Root := TreeJson.Items.Add(nil, 'save')
-      else
-        Root := TreeJson.Items.Add(nil, cboView.Text);
+      Root := vstJson.AddChild(nil);
       BuildTreeNode(Root, View, '');
-      Root.Expand(False);
+      RootPayload := GetNodePayload(Root);
+      if RootPayload <> nil then
+      begin
+        if cboView.ItemIndex = 0 then
+          RootPayload.Caption := 'save'
+        else
+          RootPayload.Caption := cboView.Text;
+      end;
+      vstJson.Expanded[Root] := True;
     end;
+    ApplySearchFilter;
   finally
-    TreeJson.Items.EndUpdate;
+    vstJson.EndUpdate;
   end;
 end;
 
-procedure TfrmMain.ShowNodeValue(ANode: TTreeNode);
+procedure TfrmMain.ShowNodeValue(ANode: PVirtualNode);
 var
   Val: IJSONAncestor;
   ValueCast: ICast;
@@ -466,7 +591,7 @@ begin
   end;
 
   lblPath.Caption := TreeNodePath(ANode);
-  Val := NodeJson(ANode);
+  Val := NodeJson(vstJson, ANode);
   if Val = nil then
   begin
     FMemoNode := ANode;
@@ -499,19 +624,22 @@ begin
   FMemoDirty := False;
 end;
 
-function TfrmMain.TreeNodePath(ANode: TTreeNode): string;
+function TfrmMain.TreeNodePath(ANode: PVirtualNode): string;
 var
   Parts: TStringList;
-  N: TTreeNode;
+  N: PVirtualNode;
+  Payload: TJsonNodePayload;
 begin
   Parts := TStringList.Create;
   try
     Parts.Delimiter := '\';
     Parts.StrictDelimiter := True;
     N := ANode;
-    while N <> nil do
+    while (N <> nil) and (N <> vstJson.RootNode) do
     begin
-      Parts.Insert(0, N.Text);
+      Payload := GetNodePayload(N);
+      if (Payload <> nil) and (Payload.Caption <> '') then
+        Parts.Insert(0, Payload.Caption);
       N := N.Parent;
     end;
     Result := Parts.DelimitedText;
@@ -520,39 +648,20 @@ begin
   end;
 end;
 
-procedure TfrmMain.UpdateNodeCaption(ANode: TTreeNode; AValue: IJSONAncestor);
+procedure TfrmMain.UpdateNodeCaption(ANode: PVirtualNode; AValue: IJSONAncestor);
 var
-  S: string;
-  P: Integer;
-  ValueCast: ICast;
+  Payload: TJsonNodePayload;
 begin
   if (ANode = nil) or (AValue = nil) then
     Exit;
-  S := ANode.Text;
-  P := Pos(': ', S);
-  if P > 0 then
-    S := Copy(S, 1, P + 1)
-  else
-    S := '';
-  ValueCast := TCast.Create(AValue);
-  case ValueCast.DataType of
-    dtString:
-      ANode.Text := S + '"' + ValueCast.AsString + '"';
-    dtInteger:
-      ANode.Text := S + IntToStr(ValueCast.AsInteger);
-    dtFloat:
-      ANode.Text := S + FloatToStr(ValueCast.AsFloat);
-    dtBoolean:
-      if ValueCast.AsBoolean then
-        ANode.Text := S + 'true'
-      else
-        ANode.Text := S + 'false';
-    dtNull:
-      ANode.Text := S + 'null';
-  end;
+  Payload := GetNodePayload(ANode);
+  if Payload = nil then
+    Exit;
+  SetNodeFields(Payload, AValue, Payload.NodeKey);
+  vstJson.InvalidateNode(ANode);
 end;
 
-function TfrmMain.ApplyValueFromMemo(AValue: IJSONAncestor; ANode: TTreeNode): Boolean;
+function TfrmMain.ApplyValueFromMemo(AValue: IJSONAncestor; ANode: PVirtualNode): Boolean;
 var
   S: string;
   Num: Double;
@@ -614,7 +723,7 @@ end;
 
 function TfrmMain.ApplyMemoIfDirty: Boolean;
 var
-  Node: TTreeNode;
+  Node: PVirtualNode;
   Val: IJSONAncestor;
 begin
   Result := True;
@@ -622,7 +731,7 @@ begin
     Exit;
 
   Node := FMemoNode;
-  Val := NodeJson(Node);
+  Val := NodeJson(vstJson, Node);
   if Val = nil then
   begin
     FMemoDirty := False;
@@ -632,96 +741,152 @@ begin
   if not ApplyValueFromMemo(Val, Node) then
     Exit(False);
 
-  UpdateNodeCaption(Node, NodeJson(Node));
+  UpdateNodeCaption(Node, NodeJson(vstJson, Node));
   SyncJsonMemo;
   SetModified(True);
   FMemoDirty := False;
 end;
 
-function TfrmMain.NodeMatchesSearch(ANode: TTreeNode; const ASearch: string): Boolean;
+function TfrmMain.NodeMatchesSearch(ANode: PVirtualNode; const ASearch: string): Boolean;
+var
+  Payload: TJsonNodePayload;
 begin
-  Result := (ANode <> nil) and (ASearch <> '') and (Pos(UpperCase(ASearch), UpperCase(ANode.Text)) > 0);
+  Result := False;
+  if (ANode = nil) or (ASearch = '') then
+    Exit;
+  Payload := GetNodePayload(ANode);
+  if Payload = nil then
+    Exit;
+  Result := (Pos(UpperCase(ASearch), UpperCase(Payload.NodeKey)) > 0)
+    or (Pos(UpperCase(ASearch), UpperCase(Payload.Caption)) > 0)
+    or (Pos(UpperCase(ASearch), UpperCase(Payload.ValuePreview)) > 0);
 end;
 
-procedure TfrmMain.CollectNodes(ANode: TTreeNode; AList: TList<TTreeNode>);
+procedure TfrmMain.UpdateSearchFilterRecursive(ANode: PVirtualNode);
 var
-  N: TTreeNode;
+  Child: PVirtualNode;
+  ChildVisible: Boolean;
 begin
-  if ANode = nil then
-    Exit;
-  AList.Add(ANode);
-  N := ANode.getFirstChild;
-  while N <> nil do
+  Child := vstJson.GetFirstChild(ANode);
+  ChildVisible := False;
+  while Child <> nil do
   begin
-    CollectNodes(N, AList);
-    N := N.getNextSibling;
+    UpdateSearchFilterRecursive(Child);
+    if not vstJson.IsFiltered[Child] then
+      ChildVisible := True;
+    Child := vstJson.GetNextSibling(Child);
+  end;
+
+  if FSearchText = '' then
+    vstJson.IsFiltered[ANode] := False
+  else if NodeMatchesSearch(ANode, FSearchText) or ChildVisible then
+  begin
+    vstJson.IsFiltered[ANode] := False;
+    if ChildVisible or NodeMatchesSearch(ANode, FSearchText) then
+      vstJson.Expanded[ANode] := True;
+  end
+  else
+    vstJson.IsFiltered[ANode] := True;
+end;
+
+procedure TfrmMain.ApplySearchFilter;
+var
+  Root: PVirtualNode;
+  MatchCount: Integer;
+  Node: PVirtualNode;
+  StatusMsg: string;
+begin
+  FSearchText := Trim(edtSearch.Text);
+  vstJson.BeginUpdate;
+  try
+    Root := vstJson.GetFirst;
+    if Root <> nil then
+      UpdateSearchFilterRecursive(Root);
+
+    MatchCount := 0;
+    if FSearchText <> '' then
+    begin
+      Node := vstJson.GetFirst;
+      while Node <> nil do
+      begin
+        if NodeMatchesSearch(Node, FSearchText) and not vstJson.IsFiltered[Node] then
+          Inc(MatchCount);
+        Node := vstJson.GetNext(Node);
+      end;
+    end;
+  finally
+    vstJson.EndUpdate;
+  end;
+
+  UpdateStatus;
+  if FSearchText <> '' then
+  begin
+    StatusMsg := StatusBar.SimpleText + '  |  найдено: ' + IntToStr(MatchCount);
+    StatusBar.SimpleText := StatusMsg;
   end;
 end;
 
-function TfrmMain.FindSearchNode(AForward: Boolean): TTreeNode;
+function TfrmMain.FindSearchNode(AForward: Boolean): PVirtualNode;
 var
-  All: TList<TTreeNode>;
+  Node, Start: PVirtualNode;
   Search: string;
-  I, StartIdx: Integer;
 begin
   Result := nil;
   Search := Trim(edtSearch.Text);
-  if (Search = '') or (TreeJson.Items.Count = 0) then
+  if Search = '' then
     Exit;
 
-  All := TList<TTreeNode>.Create;
-  try
-    CollectNodes(TreeJson.Items.GetFirstNode, All);
-    if All.Count = 0 then
-      Exit;
+  Node := vstJson.FocusedNode;
+  if AForward then
+  begin
+    if Node <> nil then
+      Node := vstJson.GetNext(Node)
+    else
+      Node := vstJson.GetFirst;
+  end
+  else
+  begin
+    if Node <> nil then
+      Node := vstJson.GetPrevious(Node)
+    else
+      Node := vstJson.GetLast;
+  end;
 
-    StartIdx := 0;
-    if FLastSearchNode <> nil then
-    begin
-      I := All.IndexOf(FLastSearchNode);
-      if I >= 0 then
-        StartIdx := I;
-    end
-    else if TreeJson.Selected <> nil then
-    begin
-      I := All.IndexOf(TreeJson.Selected);
-      if I >= 0 then
-        StartIdx := I;
-    end;
+  if Node = nil then
+    Exit;
 
-    for I := 1 to All.Count do
+  Start := Node;
+  repeat
+    if NodeMatchesSearch(Node, Search) and not vstJson.IsFiltered[Node] then
+      Exit(Node);
+    if AForward then
+      Node := vstJson.GetNext(Node)
+    else
+      Node := vstJson.GetPrevious(Node);
+    if Node = nil then
     begin
       if AForward then
-        StartIdx := (StartIdx + 1) mod All.Count
+        Node := vstJson.GetFirst
       else
-      begin
-        StartIdx := StartIdx - 1;
-        if StartIdx < 0 then
-          StartIdx := All.Count - 1;
-      end;
-      if NodeMatchesSearch(All[StartIdx], Search) then
-        Exit(All[StartIdx]);
+        Node := vstJson.GetLast;
     end;
-  finally
-    All.Free;
-  end;
+  until Node = Start;
 end;
 
-procedure TfrmMain.FocusSearchNode(ANode: TTreeNode);
+procedure TfrmMain.FocusSearchNode(ANode: PVirtualNode);
 var
-  N: TTreeNode;
+  N: PVirtualNode;
 begin
   if ANode = nil then
     Exit;
   N := ANode.Parent;
   while N <> nil do
   begin
-    N.Expanded := True;
+    vstJson.Expanded[N] := True;
     N := N.Parent;
   end;
-  TreeJson.Selected := ANode;
-  ANode.MakeVisible;
-  FLastSearchNode := ANode;
+  vstJson.FocusedNode := ANode;
+  vstJson.ScrollIntoView(ANode, True, False);
   ShowNodeValue(ANode);
 end;
 
@@ -901,27 +1066,55 @@ begin
     Close;
 end;
 
-procedure TfrmMain.TreeJsonChange(Sender: TObject; Node: TTreeNode);
+procedure TfrmMain.vstJsonFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode;
+  OldColumn, NewColumn: TColumnIndex; var Allowed: Boolean);
 begin
+  Allowed := True;
   if FUpdating then
     Exit;
   if not ApplyMemoIfDirty then
   begin
-    FUpdating := True;
-    try
-      if FMemoNode <> nil then
-        TreeJson.Selected := FMemoNode;
-    finally
-      FUpdating := False;
-    end;
+    Allowed := False;
+    if FMemoNode <> nil then
+      vstJson.FocusedNode := FMemoNode;
     Exit;
   end;
+end;
+
+procedure TfrmMain.vstJsonFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  Column: TColumnIndex);
+begin
+  if FUpdating then
+    Exit;
   ShowNodeValue(Node);
+end;
+
+procedure TfrmMain.vstJsonGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType; var CellText: string);
+var
+  Payload: TJsonNodePayload;
+begin
+  Payload := GetNodePayload(Node);
+  if Payload = nil then
+    Exit;
+  case Column of
+    0:
+      CellText := Payload.Caption;
+    1:
+      CellText := Payload.ValuePreview;
+  end;
+end;
+
+procedure TfrmMain.edtSearchChange(Sender: TObject);
+begin
+  if FUpdating or (FJsonRoot = nil) then
+    Exit;
+  ApplySearchFilter;
 end;
 
 procedure TfrmMain.btnApplyClick(Sender: TObject);
 begin
-  FMemoNode := TreeJson.Selected;
+  FMemoNode := vstJson.FocusedNode;
   ApplyMemoIfDirty;
 end;
 
@@ -963,7 +1156,13 @@ begin
     Exit;
   try
     FUpdating := True;
-    memoJson.Lines.Text := FormatJson(View);
+    memoJson.Lines.BeginUpdate;
+    try
+      memoJson.Lines.Text := FormatJson(View);
+    finally
+      memoJson.Lines.EndUpdate;
+    end;
+    FJsonMemoDirty := False;
     SetModified(True);
   finally
     FUpdating := False;
@@ -998,7 +1197,6 @@ begin
     Exit;
   if not ApplyMemoIfDirty then
     Exit;
-  FLastSearchNode := nil;
   RebuildTree;
   SyncJsonMemo;
   UpdateStatus;
@@ -1006,7 +1204,7 @@ end;
 
 procedure TfrmMain.btnFindNextClick(Sender: TObject);
 var
-  N: TTreeNode;
+  N: PVirtualNode;
 begin
   N := FindSearchNode(True);
   if N <> nil then
@@ -1017,7 +1215,7 @@ end;
 
 procedure TfrmMain.btnFindPrevClick(Sender: TObject);
 var
-  N: TTreeNode;
+  N: PVirtualNode;
 begin
   N := FindSearchNode(False);
   if N <> nil then
@@ -1036,9 +1234,9 @@ begin
       btnFindNextClick(nil);
     Key := 0;
   end
-  else if Key = VK_RETURN then
+  else if Key = VK_ESCAPE then
   begin
-    btnFindNextClick(nil);
+    edtSearch.Clear;
     Key := 0;
   end;
 end;
@@ -1233,6 +1431,25 @@ begin
   SetupSpeedButtonIcon(spbExitApp, fa_sign_out, 'Выход', 18, clGray);
   SetupSpeedButtonIcon(spbFolderSelect, fa_folder, 'Выбрать папку с сохранениями', 14, TColor($0000A0D0));
   UpdateFolderPanelVisibility;
+end;
+
+procedure TfrmMain.SetupVirtualTree;
+var
+  Col: TVirtualTreeColumn;
+begin
+  vstJson.NodeDataSize := SizeOf(TJsonNodeRef);
+  vstJson.Header.Columns.Clear;
+  Col := vstJson.Header.Columns.Add;
+  Col.Text := 'Ключ';
+  Col.Width := 140;
+  Col := vstJson.Header.Columns.Add;
+  Col.Text := 'Значение';
+  Col.Width := 120;
+  vstJson.Header.Options := vstJson.Header.Options + [hoVisible, hoAutoResize, hoColumnResize];
+  vstJson.TreeOptions.PaintOptions := vstJson.TreeOptions.PaintOptions + [toShowButtons, toShowRoot, toShowTreeLines];
+  vstJson.TreeOptions.MiscOptions := vstJson.TreeOptions.MiscOptions + [toGridExtensions, toFullRepaintOnResize];
+  vstJson.TreeOptions.SelectionOptions := vstJson.TreeOptions.SelectionOptions + [toFullRowSelect];
+  vstJson.DefaultNodeHeight := 20;
 end;
 
 procedure TfrmMain.SetupSynEditors;

@@ -312,9 +312,9 @@ object frmMain: TfrmMain
       object lblSearch: TLabel
         Left = 8
         Top = 56
-        Width = 35
+        Width = 56
         Height = 15
-        Caption = 'Search'
+        Caption = 'Search key'
       end
       object cboView: TComboBox
         Left = 8
@@ -328,42 +328,32 @@ object frmMain: TfrmMain
       object edtSearch: TEdit
         Left = 50
         Top = 53
-        Width = 163
+        Width = 234
         Height = 23
         TabOrder = 1
+        OnChange = edtSearchChange
         OnKeyDown = edtSearchKeyDown
       end
-      object btnFindNext: TButton
-        Left = 219
-        Top = 52
-        Width = 34
-        Height = 25
-        Hint = 'Next (F3)'
-        Caption = #9660
-        TabOrder = 2
-        OnClick = btnFindNextClick
-      end
-      object btnFindPrev: TButton
-        Left = 258
-        Top = 52
-        Width = 34
-        Height = 25
-        Hint = 'Previous (Shift+F3)'
-        Caption = #9650
-        TabOrder = 3
-        OnClick = btnFindPrevClick
-      end
     end
-    object TreeJson: TTreeView
+    object vstJson: TVirtualStringTree
       Left = 0
       Top = 82
       Width = 300
       Height = 679
       Align = alClient
-      HideSelection = False
-      Indent = 19
+      DefaultNodeHeight = 19
+      Header.AutoSizeIndex = 0
+      Header.Height = 15
+      Header.MainColumn = -1
       TabOrder = 1
-      OnChange = TreeJsonChange
+      OnFocusChanged = vstJsonFocusChanged
+      OnFocusChanging = vstJsonFocusChanging
+      OnFreeNode = vstJsonFreeNode
+      OnGetText = vstJsonGetText
+      OnInitNode = vstJsonInitNode
+      Touch.InteractiveGestures = [igPan, igPressAndTap]
+      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+      Columns = <>
     end
   end
   object PanelEdit: TPanel
@@ -466,17 +456,17 @@ object frmMain: TfrmMain
     object mnuEdit: TMenuItem
       Caption = 'Edit'
       object mnuFind: TMenuItem
-        Caption = 'Find in Tree...'
+        Caption = 'Find Key...'
         ShortCut = 16454
         OnClick = mnuFindClick
       end
       object mnuFindNext: TMenuItem
-        Caption = 'Find Next'
+        Caption = 'Next Match (F3)'
         ShortCut = 114
         OnClick = btnFindNextClick
       end
       object mnuFindPrev: TMenuItem
-        Caption = 'Find Previous'
+        Caption = 'Previous Match (Shift+F3)'
         ShortCut = 8238
         OnClick = btnFindPrevClick
       end
