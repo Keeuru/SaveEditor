@@ -16,7 +16,7 @@ object frmMain: TfrmMain
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   TextHeight = 15
-  object Splitter1: TSplitter
+  object splJsonView: TSplitter
     Left = 847
     Top = 0
     Height = 761
@@ -338,6 +338,7 @@ object frmMain: TfrmMain
     Font.Style = []
     Font.Quality = fqClearTypeNatural
     TabOrder = 3
+    OnKeyDown = memoJsonKeyDown
     UseCodeFolding = False
     Gutter.Font.Charset = DEFAULT_CHARSET
     Gutter.Font.Color = clWindowText
@@ -350,16 +351,15 @@ object frmMain: TfrmMain
     ScrollbarAnnotations = <>
     WantTabs = True
     OnChange = memoJsonChange
-    OnKeyDown = memoJsonKeyDown
   end
-  object Panel1: TPanel
+  object pnlJsonTreeEdit: TPanel
     Left = 850
     Top = 0
     Width = 400
     Height = 761
     Align = alRight
     BevelOuter = bvNone
-    Caption = 'Panel1'
+    Caption = 'pnlJsonTreeEdit'
     TabOrder = 4
     object splEditJSON: TSplitter
       Left = 0
@@ -375,7 +375,7 @@ object frmMain: TfrmMain
       ExplicitTop = 439
       ExplicitWidth = 218
     end
-    object GridPanel1: TGridPanel
+    object gpJsonTree: TGridPanel
       Left = 0
       Top = 0
       Width = 400
@@ -424,8 +424,6 @@ object frmMain: TfrmMain
         Align = alLeft
         Caption = 'Search key'
         Layout = tlCenter
-        ExplicitLeft = 8
-        ExplicitTop = 8
         ExplicitHeight = 15
       end
       object edtSearch: TEdit
@@ -434,12 +432,12 @@ object frmMain: TfrmMain
         Top = 4
         Width = 340
         Height = 23
+        Hint = #1056#1119#1056#1109#1056#1105#1057#1027#1056#1108' '#1056#1108#1056#187#1057#1035#1057#8225#1056#176' (Ctrl+F, F3 / Shift+F3)'
         Margins.Left = 0
         Margins.Top = 4
         Margins.Right = 0
         Align = alClient
-        Hint = 'Поиск ключа (Ctrl+F, F3 / Shift+F3)'
-        ParentShowHint = True
+        ParentShowHint = False
         ShowHint = True
         TabOrder = 0
         OnChange = edtSearchChange
@@ -454,9 +452,8 @@ object frmMain: TfrmMain
         Anchors = []
         DefaultNodeHeight = 19
         Header.AutoSizeIndex = 0
-        Header.Height = 15
         ParentColor = True
-        TabOrder = 2
+        TabOrder = 1
         OnFocusChanged = vstJsonFocusChanged
         OnFocusChanging = vstJsonFocusChanging
         OnFreeNode = vstJsonFreeNode
@@ -464,8 +461,6 @@ object frmMain: TfrmMain
         OnInitNode = vstJsonInitNode
         Touch.InteractiveGestures = [igPan, igPressAndTap]
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-        ExplicitLeft = 3
-        ExplicitTop = 63
         Columns = <
           item
             Position = 0
@@ -479,7 +474,7 @@ object frmMain: TfrmMain
           end>
       end
     end
-    object GridPanel2: TGridPanel
+    object gpJsonValueEdit: TGridPanel
       Left = 0
       Top = 561
       Width = 400
@@ -562,8 +557,8 @@ object frmMain: TfrmMain
     end
   end
   object synJsonHL: TSynJSONSyn
-    Left = 112
-    Top = 536
+    Left = 208
+    Top = 592
   end
   object OpenDialog: TOpenDialog
     Left = 112
@@ -584,7 +579,7 @@ object frmMain: TfrmMain
   object ApplicationEvents: TApplicationEvents
     OnActivate = AppActivate
     OnIdle = AppIdle
-    Left = 208
+    Left = 112
     Top = 592
   end
 end

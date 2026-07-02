@@ -56,10 +56,10 @@ type
     spbReloadTree: TSpeedButton;
     spbOpenFile: TSpeedButton;
     spbExitApp: TSpeedButton;
-    Splitter1: TSplitter;
-    GridPanel1: TGridPanel;
-    Panel1: TPanel;
-    GridPanel2: TGridPanel;
+    splJsonView: TSplitter;
+    gpJsonTree: TGridPanel;
+    pnlJsonTreeEdit: TPanel;
+    gpJsonValueEdit: TGridPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
